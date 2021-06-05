@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Service.Repositories;
+using Service.Services;
 
 namespace WebApi
 {
@@ -25,6 +27,8 @@ namespace WebApi
             });
 
             services.AddControllers();
+            services.AddScoped<WorkItemService, WorkItemService>();
+            services.AddScoped<WorkItemRepository, WorkItemRepository>();
             services.Configure<DatabaseConfiguration>(Configuration.GetSection(DatabaseConfiguration.Key));
         }
 
