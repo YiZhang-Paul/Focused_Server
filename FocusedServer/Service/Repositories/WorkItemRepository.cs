@@ -16,7 +16,8 @@ namespace Service.Repositories
 
         public async Task<List<WorkItemDto>> GetWorkItems(int skip = 0, int limit = 0)
         {
-            var filter = Builders<WorkItem>.Filter.Regex(_ => _.Parent, @"^\W*$");
+            var builder = Builders<WorkItem>.Filter;
+            var filter = builder.Eq(_ => _.Parent, null) | builder.Regex(_ => _.Parent, @"^\W*$");
 
             return await Collection.Find(filter)
                 .Skip(skip)
