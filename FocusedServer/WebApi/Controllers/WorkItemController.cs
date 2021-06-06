@@ -17,6 +17,13 @@ namespace WebApi.Controllers
             WorkItemService = workItemService;
         }
 
+        [HttpPost]
+        [Route("")]
+        public async Task<bool> CreateWorkItem([FromBody]WorkItemDto item)
+        {
+            return await WorkItemService.CreateWorkItem(item).ConfigureAwait(false);
+        }
+
         [HttpGet]
         [Route("")]
         public async Task<List<WorkItemDto>> GetWorkItems()

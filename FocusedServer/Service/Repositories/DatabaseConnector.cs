@@ -2,6 +2,7 @@ using Core.Configurations;
 using Core.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using System.Threading.Tasks;
 
 namespace Service.Repositories
 {
@@ -12,6 +13,11 @@ namespace Service.Repositories
         public DatabaseConnector(IOptions<DatabaseConfiguration> configuration, string collection)
         {
             Collection = Connect(configuration.Value, collection);
+        }
+
+        public async Task Add(T document)
+        {
+            await Collection.InsertOneAsync(document).ConfigureAwait(false);
         }
 
         private IMongoCollection<T> Connect(DatabaseConfiguration configuration, string collection)
