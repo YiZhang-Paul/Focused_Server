@@ -37,9 +37,9 @@ namespace Service.Services
             }
         }
 
-        public async Task<List<WorkItemDto>> GetWorkItems(int skip = 0, int limit = 0)
+        public async Task<List<WorkItemDto>> GetWorkItems(WorkItemQuery query)
         {
-            return await WorkItemRepository.GetWorkItems(skip, limit).ConfigureAwait(false);
+            return await WorkItemRepository.GetWorkItems(query).ConfigureAwait(false);
         }
     }
 }

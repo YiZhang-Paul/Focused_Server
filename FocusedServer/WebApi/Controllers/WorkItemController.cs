@@ -1,4 +1,5 @@
 using Core.Dtos;
+using Core.Models.WorkItem;
 using Microsoft.AspNetCore.Mvc;
 using Service.Services;
 using System.Collections.Generic;
@@ -24,11 +25,11 @@ namespace WebApi.Controllers
             return await WorkItemService.CreateWorkItem(item).ConfigureAwait(false);
         }
 
-        [HttpGet]
-        [Route("")]
-        public async Task<List<WorkItemDto>> GetWorkItems()
+        [HttpPost]
+        [Route("summaries")]
+        public async Task<List<WorkItemDto>> GetWorkItemSummaries([FromBody]WorkItemQuery query)
         {
-            return await WorkItemService.GetWorkItems().ConfigureAwait(false);
+            return await WorkItemService.GetWorkItems(query).ConfigureAwait(false);
         }
     }
 }

@@ -14,14 +14,11 @@ namespace Service.Repositories
     {
         public WorkItemRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(WorkItem).Name) { }
 
-        public async Task<List<WorkItemDto>> GetWorkItems(int skip = 0, int limit = 0)
+        public async Task<List<WorkItemDto>> GetWorkItems(WorkItemQuery query)
         {
-            var builder = Builders<WorkItem>.Filter;
-            var filter = builder.Eq(_ => _.Parent, null) | builder.Regex(_ => _.Parent, @"^\W*$");
-
-            return await Collection.Find(filter)
-                .Skip(skip)
-                .Limit(limit)
+            return await Collection.Find(GetFilter(query))
+                .Skip(query.Skip)
+                .Limit(query.Limit)
                 .Project(_ => new WorkItemDto
                 {
                     Name = _.Name,
@@ -41,6 +38,29 @@ namespace Service.Repositories
                 })
                 .ToListAsync()
                 .ConfigureAwait(false);
+        }
+
+        private FilterDefinition<WorkItem> GetFilter(WorkItemQuery query)
+        {
+            var builder = Builders<WorkItem>.Filter;
+            var filter = builder.Or(builder.Eq(_ => _.Parent, null), builder.Regex(_ => _.Parent, @"^\W*$"));
+
+            if (!string.IsNullOrWhiteSpace(query.SearchText))
+            {
+                filter &= builder.Where(_ => _.Name.ToLower().Contains(query.SearchText.ToLower()));
+            }
+
+            if (query.IsCompleted.HasValue)
+            {
+                filter &= builder.Eq(_ => _.IsCompleted, query.IsCompleted);
+            }
+
+            if (query.Type.HasValue)
+            {
+                filter &= builder.Eq(_ => _.Type, query.Type);
+            }
+
+            return filter;
         }
     }
 }
