@@ -11,5 +11,6 @@ namespace Core.Dtos
         public int Estimation { get; set; }
         public ProgressionCounter<int> SubtaskProgress { get; set; } = new ProgressionCounter<int>();
         public ProgressionCounter<int> ChecklistProgress { get; set; } = new ProgressionCounter<int>();
+        public bool IsCompleted { get; set; }
     }
 }

@@ -25,6 +25,7 @@ namespace Service.Repositories
                     Type = _.Type,
                     Priority = _.Priority,
                     Estimation = _.Estimation,
+                    IsCompleted = _.IsCompleted,
                     SubtaskProgress = new ProgressionCounter<int>
                     {
                         Current = _.Subtasks.Count(task => task.IsCompleted),
