@@ -5,6 +5,7 @@ namespace Core.Dtos
 {
     public class WorkItemDto
     {
+        public string Id { get; set; }
         public string Name { get; set; }
         public WorkItemType Type { get; set; } = WorkItemType.Regular;
         public WorkItemPriority Priority { get; set; } = WorkItemPriority.NotUrgentNotImportant;

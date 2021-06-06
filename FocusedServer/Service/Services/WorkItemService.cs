@@ -37,6 +37,24 @@ namespace Service.Services
             }
         }
 
+        public async Task<bool> UpdateWorkItemMeta(WorkItemDto item, string id)
+        {
+            var workItem = await WorkItemRepository.Get(id).ConfigureAwait(false);
+
+            if (workItem == null)
+            {
+                return false;
+            }
+
+            workItem.Name = item.Name;
+            workItem.Type = item.Type;
+            workItem.Priority = item.Priority;
+            workItem.Status = item.Status;
+            workItem.Estimation = item.Estimation;
+
+            return await WorkItemRepository.Replace(workItem).ConfigureAwait(false) != null;
+        }
+
         public async Task<List<WorkItemDto>> GetWorkItems(WorkItemQuery query)
         {
             return await WorkItemRepository.GetWorkItems(query).ConfigureAwait(false);

@@ -22,6 +22,7 @@ namespace Service.Repositories
                 .Limit(query.Limit)
                 .Project(_ => new WorkItemDto
                 {
+                    Id = _.Id,
                     Name = _.Name,
                     Type = _.Type,
                     Priority = _.Priority,
