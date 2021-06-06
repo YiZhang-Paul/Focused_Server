@@ -13,7 +13,8 @@ namespace Core.Models.WorkItem
         public WorkItemType Type { get; set; } = WorkItemType.Regular;
         public WorkItemPriority Priority { get; set; } = WorkItemPriority.NotUrgentNotImportant;
         public WorkItemStatus Status { get; set; } = WorkItemStatus.Idle;
-        public int Estimation { get; set; }
+        public double EstimatedHours { get; set; }
+        public TimeSeries TimeSeries { get; set; } = new TimeSeries();
         public bool[] Recur { get; set; } = new bool[7];
         public List<ChecklistEntry> Checklist { get; set; } = new List<ChecklistEntry>();
         public TimeInfo TimeInfo { get; set; } = new TimeInfo();

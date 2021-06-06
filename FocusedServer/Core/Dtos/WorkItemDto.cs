@@ -10,7 +10,8 @@ namespace Core.Dtos
         public WorkItemType Type { get; set; } = WorkItemType.Regular;
         public WorkItemPriority Priority { get; set; } = WorkItemPriority.NotUrgentNotImportant;
         public WorkItemStatus Status { get; set; } = WorkItemStatus.Idle;
-        public int Estimation { get; set; }
+        public double EstimatedHours { get; set; }
+        public double ActualHours { get; set; }
         public ProgressionCounter<int> SubtaskProgress { get; set; } = new ProgressionCounter<int>();
         public ProgressionCounter<int> ChecklistProgress { get; set; } = new ProgressionCounter<int>();
     }
