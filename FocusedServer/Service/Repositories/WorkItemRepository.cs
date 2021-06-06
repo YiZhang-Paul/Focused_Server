@@ -53,6 +53,18 @@ namespace Service.Repositories
                 filter &= builder.Where(_ => _.Name.ToLower().Contains(query.SearchText.ToLower()));
             }
 
+            if (query.IsHighlighted.HasValue)
+            {
+                if (query.IsHighlighted.Value)
+                {
+                    filter &= builder.Eq(_ => _.Status, WorkItemStatus.Highlighted);
+                }
+                else
+                {
+                    filter &= builder.Ne(_ => _.Status, WorkItemStatus.Highlighted);
+                }
+            }
+
             if (query.IsCompleted.HasValue)
             {
                 if (query.IsCompleted.Value)

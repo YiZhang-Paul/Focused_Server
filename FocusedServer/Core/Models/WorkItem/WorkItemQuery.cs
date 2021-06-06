@@ -7,7 +7,8 @@ namespace Core.Models.WorkItem
         public int Skip { get; set; }
         public int Limit { get; set; }
         public string SearchText { get; set; }
-        public bool? IsCompleted { get; set; }
         public WorkItemType? Type { get; set; }
+        public bool? IsHighlighted { get; set; }
+        public bool? IsCompleted { get; set; }
     }
 }
