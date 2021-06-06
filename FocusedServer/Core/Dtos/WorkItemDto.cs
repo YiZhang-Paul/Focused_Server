@@ -8,9 +8,9 @@ namespace Core.Dtos
         public string Name { get; set; }
         public WorkItemType Type { get; set; } = WorkItemType.Regular;
         public WorkItemPriority Priority { get; set; } = WorkItemPriority.NotUrgentNotImportant;
+        public WorkItemStatus Status { get; set; } = WorkItemStatus.Idle;
         public int Estimation { get; set; }
         public ProgressionCounter<int> SubtaskProgress { get; set; } = new ProgressionCounter<int>();
         public ProgressionCounter<int> ChecklistProgress { get; set; } = new ProgressionCounter<int>();
-        public bool IsCompleted { get; set; }
     }
 }

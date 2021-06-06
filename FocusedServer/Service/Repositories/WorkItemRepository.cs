@@ -1,5 +1,6 @@
 using Core.Configurations;
 using Core.Dtos;
+using Core.Enums;
 using Core.Models.Generic;
 using Core.Models.WorkItem;
 using Microsoft.Extensions.Options;
@@ -24,11 +25,11 @@ namespace Service.Repositories
                     Name = _.Name,
                     Type = _.Type,
                     Priority = _.Priority,
+                    Status = _.Status,
                     Estimation = _.Estimation,
-                    IsCompleted = _.IsCompleted,
                     SubtaskProgress = new ProgressionCounter<int>
                     {
-                        Current = _.Subtasks.Count(task => task.IsCompleted),
+                        Current = _.Subtasks.Count(task => task.Status == WorkItemStatus.Completed),
                         Target = _.Subtasks.Count
                     },
                     ChecklistProgress = new ProgressionCounter<int>
@@ -53,7 +54,14 @@ namespace Service.Repositories
 
             if (query.IsCompleted.HasValue)
             {
-                filter &= builder.Eq(_ => _.IsCompleted, query.IsCompleted);
+                if (query.IsCompleted.Value)
+                {
+                    filter &= builder.Eq(_ => _.Status, WorkItemStatus.Completed);
+                }
+                else
+                {
+                    filter &= builder.Ne(_ => _.Status, WorkItemStatus.Completed);
+                }
             }
 
             if (query.Type.HasValue)
