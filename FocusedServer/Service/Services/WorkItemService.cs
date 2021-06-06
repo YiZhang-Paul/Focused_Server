@@ -24,7 +24,7 @@ namespace Service.Services
                     Name = item.Name.Trim(),
                     Type = item.Type,
                     Priority = item.Priority,
-                    EstimatedHours = item.EstimatedHours
+                    EstimatedHours = item.ItemProgress.Target
                 };
 
                 await WorkItemRepository.Add(workItem).ConfigureAwait(false);
@@ -50,7 +50,7 @@ namespace Service.Services
             workItem.Type = item.Type;
             workItem.Priority = item.Priority;
             workItem.Status = item.Status;
-            workItem.EstimatedHours = item.EstimatedHours;
+            workItem.EstimatedHours = item.ItemProgress.Target;
 
             return await WorkItemRepository.Replace(workItem).ConfigureAwait(false) != null;
         }

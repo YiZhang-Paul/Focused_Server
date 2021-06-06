@@ -4,5 +4,6 @@ namespace Core.Models.Generic
     {
         public T Current { get; set; }
         public T Target { get; set; }
+        public bool IsCompleted { get; set; }
     }
 }

@@ -28,17 +28,23 @@ namespace Service.Repositories
                     Type = _.Type,
                     Priority = _.Priority,
                     Status = _.Status,
-                    EstimatedHours = _.EstimatedHours,
-                    ActualHours = GetTotalTime(_.TimeSeries),
+                    ItemProgress = new ProgressionCounter<double>
+                    {
+                        Current = GetTotalTime(_.TimeSeries),
+                        Target = _.EstimatedHours,
+                        IsCompleted = _.Status == WorkItemStatus.Completed
+                    },
                     SubtaskProgress = new ProgressionCounter<int>
                     {
                         Current = _.Subtasks.Count(task => task.Status == WorkItemStatus.Completed),
-                        Target = _.Subtasks.Count
+                        Target = _.Subtasks.Count,
+                        IsCompleted = _.Subtasks.All(task => task.Status == WorkItemStatus.Completed)
                     },
                     ChecklistProgress = new ProgressionCounter<int>
                     {
                         Current = _.Checklist.Count(entry => entry.IsCompleted),
-                        Target = _.Checklist.Count
+                        Target = _.Checklist.Count,
+                        IsCompleted = _.Checklist.All(entry => entry.IsCompleted)
                     }
                 })
                 .ToListAsync()
