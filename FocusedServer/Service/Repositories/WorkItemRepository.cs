@@ -5,6 +5,7 @@ using Core.Models.Generic;
 using Core.Models.WorkItem;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,6 +29,7 @@ namespace Service.Repositories
                     Priority = _.Priority,
                     Status = _.Status,
                     EstimatedHours = _.EstimatedHours,
+                    ActualHours = GetTotalTime(_.TimeSeries),
                     SubtaskProgress = new ProgressionCounter<int>
                     {
                         Current = _.Subtasks.Count(task => task.Status == WorkItemStatus.Completed),
@@ -83,6 +85,30 @@ namespace Service.Repositories
             }
 
             return filter;
+        }
+
+        private double GetTotalTime(TimeSeries series)
+        {
+            var total = series.ManualTracking;
+            var autoTracking = series.AutoTracking.Take(series.AutoTracking.Count / 2 * 2).ToList();
+
+            for (var i = 0; i < autoTracking.Count - 1; i += 2)
+            {
+                var begin = autoTracking[i];
+                var stop = autoTracking[i + 1];
+
+                if (begin.Type == TimeEventType.Begin && stop.Type == TimeEventType.Stop)
+                {
+                    total += (stop.Time - begin.Time).TotalHours;
+                }
+            }
+
+            if (series.AutoTracking.LastOrDefault()?.Type == TimeEventType.Begin)
+            {
+                total += (DateTime.UtcNow - series.AutoTracking.Last().Time).TotalHours;
+            }
+
+            return total;
         }
     }
 }
