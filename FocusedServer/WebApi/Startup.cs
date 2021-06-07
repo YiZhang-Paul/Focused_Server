@@ -27,8 +27,9 @@ namespace WebApi
             });
 
             services.AddControllers();
-            services.AddScoped<WorkItemService, WorkItemService>();
             services.AddScoped<WorkItemRepository, WorkItemRepository>();
+            services.AddScoped<FocusSessionRepository, FocusSessionRepository>();
+            services.AddScoped<WorkItemService, WorkItemService>();
             services.Configure<DatabaseConfiguration>(Configuration.GetSection(DatabaseConfiguration.Key));
         }
 

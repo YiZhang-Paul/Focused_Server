@@ -30,7 +30,7 @@ namespace Service.Repositories
                     Status = _.Status,
                     ItemProgress = new ProgressionCounter<double>
                     {
-                        Current = GetTotalTime(_.TimeSeries),
+                        Current = GetTotalTime(_.TimeSeries, null, null),
                         Target = _.EstimatedHours,
                         IsCompleted = _.Status == WorkItemStatus.Completed
                     },
@@ -45,6 +45,26 @@ namespace Service.Repositories
                         Current = _.Checklist.Count(entry => entry.IsCompleted),
                         Target = _.Checklist.Count,
                         IsCompleted = _.Checklist.All(entry => entry.IsCompleted)
+                    }
+                })
+                .ToListAsync()
+                .ConfigureAwait(false);
+        }
+
+        public async Task<List<WorkItemDto>> GetWorkItemProgressions(List<string> ids, DateTime? start, DateTime? end)
+        {
+            var filter = Builders<WorkItem>.Filter.In(_ => _.Id, ids);
+
+            return await Collection.Find(filter)
+                .Project(_ => new WorkItemDto
+                {
+                    Id = _.Id,
+                    Type = _.Type,
+                    ItemProgress = new ProgressionCounter<double>
+                    {
+                        Current = GetTotalTime(_.TimeSeries, start, end),
+                        Target = _.EstimatedHours,
+                        IsCompleted = _.Status == WorkItemStatus.Completed
                     }
                 })
                 .ToListAsync()
@@ -93,7 +113,7 @@ namespace Service.Repositories
             return filter;
         }
 
-        private double GetTotalTime(TimeSeries series)
+        private double GetTotalTime(TimeSeries series, DateTime? start, DateTime? end)
         {
             var total = series.ManualTracking;
             var autoTracking = series.AutoTracking.Take(series.AutoTracking.Count / 2 * 2).ToList();
@@ -103,18 +123,27 @@ namespace Service.Repositories
                 var begin = autoTracking[i];
                 var stop = autoTracking[i + 1];
 
-                if (begin.Type == TimeEventType.Begin && stop.Type == TimeEventType.Stop)
+                if (IsValidTimeEvent(begin, TimeEventType.Begin, start, end) && IsValidTimeEvent(stop, TimeEventType.Stop, start, end))
                 {
                     total += (stop.Time - begin.Time).TotalHours;
                 }
             }
 
-            if (series.AutoTracking.LastOrDefault()?.Type == TimeEventType.Begin)
+            if (series.AutoTracking.Any() && IsValidTimeEvent(series.AutoTracking.Last(), TimeEventType.Begin, start, end))
             {
-                total += (DateTime.UtcNow - series.AutoTracking.Last().Time).TotalHours;
+                var now = end.HasValue && end < DateTime.UtcNow ? end.Value : DateTime.UtcNow;
+                total += (now - series.AutoTracking.Last().Time).TotalHours;
             }
 
             return total;
+        }
+
+        private bool IsValidTimeEvent(TimeEvent timeEvent, TimeEventType type, DateTime? start, DateTime? end)
+        {
+            var isValidStart = !start.HasValue || timeEvent.Time >= start;
+            var isValidEnd = !end.HasValue || timeEvent.Time <= end;
+
+            return isValidStart && isValidEnd && timeEvent.Type == type;
         }
     }
 }
