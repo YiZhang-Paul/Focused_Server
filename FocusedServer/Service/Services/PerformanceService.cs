@@ -26,7 +26,7 @@ namespace Service.Services
             var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(start, end).ConfigureAwait(false);
             var ids = sessions.SelectMany(_ => _.WorkItemIds).Distinct().ToList();
             var progress = await WorkItemRepository.GetWorkItemProgressions(ids, start, end).ConfigureAwait(false);
-            var total = progress.Sum(_ => _.HoursSpent * (_.Type == WorkItemType.Interruption ? -1 : 1));
+            var total = progress.Sum(_ => _.Type == WorkItemType.Interruption ? 0 : _.HoursSpent);
 
             return new ProgressionCounter<double>
             {
