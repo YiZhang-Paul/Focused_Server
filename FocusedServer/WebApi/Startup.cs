@@ -30,6 +30,7 @@ namespace WebApi
             services.AddScoped<WorkItemRepository, WorkItemRepository>();
             services.AddScoped<FocusSessionRepository, FocusSessionRepository>();
             services.AddScoped<WorkItemService, WorkItemService>();
+            services.AddScoped<PerformanceService, PerformanceService>();
             services.Configure<DatabaseConfiguration>(Configuration.GetSection(DatabaseConfiguration.Key));
         }
 
