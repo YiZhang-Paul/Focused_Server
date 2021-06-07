@@ -1,3 +1,4 @@
+using Core.Dtos;
 using Core.Models.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Service.Services;
@@ -21,6 +22,13 @@ namespace WebApi.Controllers
         public async Task<ProgressionCounter<double>> GetDailyProgression(int year, int month, int day)
         {
             return await PerformanceService.GetFocusProgressionByDate(year, month, day).ConfigureAwait(false);
+        }
+
+        [HttpGet]
+        [Route("daily-activity-breakdown/{year}/{month}/{day}")]
+        public async Task<ActivityBreakdownDto> GetDailyActivityBreakdown(int year, int month, int day)
+        {
+            return await PerformanceService.GetActivityBreakdownByDate(year, month, day).ConfigureAwait(false);
         }
     }
 }

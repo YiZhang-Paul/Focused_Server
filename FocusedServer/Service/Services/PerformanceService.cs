@@ -1,3 +1,4 @@
+using Core.Dtos;
 using Core.Enums;
 using Core.Models.Generic;
 using Service.Repositories;
@@ -21,18 +22,31 @@ namespace Service.Services
 
         public async Task<ProgressionCounter<double>> GetFocusProgressionByDate(int year, int month, int day)
         {
-            var start = new DateTime(year, month, day);
-            var end = start.AddDays(1);
-            var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(start, end).ConfigureAwait(false);
-            var ids = sessions.SelectMany(_ => _.WorkItemIds).Distinct().ToList();
-            var progress = await WorkItemRepository.GetWorkItemProgressions(ids, start, end).ConfigureAwait(false);
-            var total = progress.Sum(_ => _.Type == WorkItemType.Interruption ? 0 : _.HoursSpent);
+            var breakdown = await GetActivityBreakdownByDate(year, month, day).ConfigureAwait(false);
+            var total = breakdown.Regular + breakdown.Recurring + breakdown.Overlearning;
 
             return new ProgressionCounter<double>
             {
                 Current = total,
                 Target = DailyTarget,
                 IsCompleted = total >= DailyTarget
+            };
+        }
+
+        public async Task<ActivityBreakdownDto> GetActivityBreakdownByDate(int year, int month, int day)
+        {
+            var start = new DateTime(year, month, day);
+            var end = start.AddDays(1);
+            var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(start, end).ConfigureAwait(false);
+            var ids = sessions.SelectMany(_ => _.WorkItemIds).Distinct().ToList();
+            var progress = await WorkItemRepository.GetWorkItemProgressions(ids, start, end).ConfigureAwait(false);
+
+            return new ActivityBreakdownDto
+            {
+                Regular = progress.Sum(_ => _.Type == WorkItemType.Regular ? _.HoursSpent : 0),
+                Recurring = progress.Sum(_ => _.Type == WorkItemType.Recurring ? _.HoursSpent : 0),
+                Interruption = progress.Sum(_ => _.Type == WorkItemType.Interruption ? _.HoursSpent : 0),
+                Overlearning = sessions.Sum(_ => _.OverlearningHours)
             };
         }
     }
