@@ -51,21 +51,16 @@ namespace Service.Repositories
                 .ConfigureAwait(false);
         }
 
-        public async Task<List<WorkItemDto>> GetWorkItemProgressions(List<string> ids, DateTime? start, DateTime? end)
+        public async Task<List<WorkItemProgressionDto>> GetWorkItemProgressions(List<string> ids, DateTime? start, DateTime? end)
         {
             var filter = Builders<WorkItem>.Filter.In(_ => _.Id, ids);
 
             return await Collection.Find(filter)
-                .Project(_ => new WorkItemDto
+                .Project(_ => new WorkItemProgressionDto
                 {
                     Id = _.Id,
                     Type = _.Type,
-                    ItemProgress = new ProgressionCounter<double>
-                    {
-                        Current = GetTotalTime(_.TimeSeries, start, end),
-                        Target = _.EstimatedHours,
-                        IsCompleted = _.Status == WorkItemStatus.Completed
-                    }
+                    HoursSpent = GetTotalTime(_.TimeSeries, start, end)
                 })
                 .ToListAsync()
                 .ConfigureAwait(false);
