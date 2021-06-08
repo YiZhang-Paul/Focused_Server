@@ -38,7 +38,7 @@ namespace Service.Services
         public async Task<ActivityBreakdownDto> GetActivityBreakdownByDateRange(DateTime? start, DateTime? end)
         {
             var endDate = end ?? DateTime.UtcNow;
-            var startDate = start ?? endDate.AddDays(-30);
+            var startDate = start ?? endDate.AddDays(-14);
             var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(startDate, endDate).ConfigureAwait(false);
             var ids = sessions.SelectMany(_ => _.WorkItemIds).Distinct().ToList();
             var progress = await WorkItemRepository.GetWorkItemProgressions(ids, start, end).ConfigureAwait(false);
