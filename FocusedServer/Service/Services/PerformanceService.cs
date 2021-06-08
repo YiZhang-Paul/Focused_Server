@@ -41,7 +41,7 @@ namespace Service.Services
             var startDate = start ?? endDate.AddDays(-14);
             var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(startDate, endDate).ConfigureAwait(false);
             var ids = sessions.SelectMany(_ => _.WorkItemIds).Distinct().ToList();
-            var progress = await WorkItemRepository.GetWorkItemProgressions(ids, start, end).ConfigureAwait(false);
+            var progress = await WorkItemRepository.GetWorkItemProgressions(ids, startDate, endDate).ConfigureAwait(false);
 
             return new ActivityBreakdownDto
             {
