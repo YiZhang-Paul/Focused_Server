@@ -1,4 +1,5 @@
 using Core.Enums;
+using Core.Models.Generic;
 
 namespace Core.Dtos
 {
@@ -6,6 +7,6 @@ namespace Core.Dtos
     {
         public string Id { get; set; }
         public WorkItemType Type { get; set; }
-        public double HoursSpent { get; set; }
+        public ProgressionCounter<double> Progress { get; set; }
     }
 }

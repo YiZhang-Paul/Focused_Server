@@ -45,9 +45,9 @@ namespace Service.Services
 
             return new ActivityBreakdownDto
             {
-                Regular = progress.Sum(_ => _.Type == WorkItemType.Regular ? _.HoursSpent : 0),
-                Recurring = progress.Sum(_ => _.Type == WorkItemType.Recurring ? _.HoursSpent : 0),
-                Interruption = progress.Sum(_ => _.Type == WorkItemType.Interruption ? _.HoursSpent : 0),
+                Regular = progress.Sum(_ => _.Type == WorkItemType.Regular ? _.Progress.Current : 0),
+                Recurring = progress.Sum(_ => _.Type == WorkItemType.Recurring ? _.Progress.Current : 0),
+                Interruption = progress.Sum(_ => _.Type == WorkItemType.Interruption ? _.Progress.Current : 0),
                 Overlearning = sessions.Sum(_ => _.OverlearningHours)
             };
         }

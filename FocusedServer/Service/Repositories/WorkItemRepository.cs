@@ -60,7 +60,12 @@ namespace Service.Repositories
                 {
                     Id = _.Id,
                     Type = _.Type,
-                    HoursSpent = GetTotalTime(_.TimeSeries, start, end)
+                    Progress = new ProgressionCounter<double>
+                    {
+                        Current = GetTotalTime(_.TimeSeries, start, end),
+                        Target = _.EstimatedHours,
+                        IsCompleted = _.Status == WorkItemStatus.Completed
+                    }
                 })
                 .ToListAsync()
                 .ConfigureAwait(false);
