@@ -2,6 +2,7 @@ using Core.Dtos;
 using Core.Models.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Service.Services;
+using System;
 using System.Threading.Tasks;
 
 namespace WebApi.Controllers
@@ -25,10 +26,10 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("daily-activity-breakdown/{year}/{month}/{day}")]
-        public async Task<ActivityBreakdownDto> GetDailyActivityBreakdown(int year, int month, int day)
+        [Route("activity-breakdown")]
+        public async Task<ActivityBreakdownDto> GetActivityBreakdown([FromQuery]DateTime? start, [FromQuery]DateTime? end)
         {
-            return await PerformanceService.GetActivityBreakdownByDate(year, month, day).ConfigureAwait(false);
+            return await PerformanceService.GetActivityBreakdownByDateRange(start, end).ConfigureAwait(false);
         }
     }
 }

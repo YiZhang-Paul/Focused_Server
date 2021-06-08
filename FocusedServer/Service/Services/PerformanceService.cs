@@ -22,7 +22,9 @@ namespace Service.Services
 
         public async Task<ProgressionCounter<double>> GetFocusProgressionByDate(int year, int month, int day)
         {
-            var breakdown = await GetActivityBreakdownByDate(year, month, day).ConfigureAwait(false);
+            var start = new DateTime(year, month, day);
+            var end = start.AddDays(1);
+            var breakdown = await GetActivityBreakdownByDateRange(start, end).ConfigureAwait(false);
             var total = breakdown.Regular + breakdown.Recurring + breakdown.Overlearning;
 
             return new ProgressionCounter<double>
@@ -33,11 +35,11 @@ namespace Service.Services
             };
         }
 
-        public async Task<ActivityBreakdownDto> GetActivityBreakdownByDate(int year, int month, int day)
+        public async Task<ActivityBreakdownDto> GetActivityBreakdownByDateRange(DateTime? start, DateTime? end)
         {
-            var start = new DateTime(year, month, day);
-            var end = start.AddDays(1);
-            var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(start, end).ConfigureAwait(false);
+            var endDate = end ?? DateTime.UtcNow;
+            var startDate = start ?? endDate.AddDays(-30);
+            var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(startDate, endDate).ConfigureAwait(false);
             var ids = sessions.SelectMany(_ => _.WorkItemIds).Distinct().ToList();
             var progress = await WorkItemRepository.GetWorkItemProgressions(ids, start, end).ConfigureAwait(false);
 
