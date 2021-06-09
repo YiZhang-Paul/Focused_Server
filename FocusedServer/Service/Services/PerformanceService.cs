@@ -12,12 +12,12 @@ namespace Service.Services
     {
         private const double DailyTarget = 8;
         private WorkItemRepository WorkItemRepository { get; set; }
-        private FocusSessionRepository FocusSessionRepository { get; set; }
+        private FocusSessionService FocusSessionService { get; set; }
 
-        public PerformanceService(WorkItemRepository workItemRepository, FocusSessionRepository focusSessionRepository)
+        public PerformanceService(WorkItemRepository workItemRepository, FocusSessionService focusSessionService)
         {
             WorkItemRepository = workItemRepository;
-            FocusSessionRepository = focusSessionRepository;
+            FocusSessionService = focusSessionService;
         }
 
         public async Task<ProgressionCounter<double>> GetFocusProgressionByDate(int year, int month, int day)
@@ -39,8 +39,7 @@ namespace Service.Services
         {
             var endDate = end ?? DateTime.UtcNow;
             var startDate = start ?? endDate.AddDays(-14);
-            var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(startDate, endDate).ConfigureAwait(false);
-            var ids = sessions.SelectMany(_ => _.WorkItemIds).Distinct().ToList();
+            var ids = await FocusSessionService.GetSessionWorkItemsByDateRange(startDate, endDate).ConfigureAwait(false);
             var progress = await WorkItemRepository.GetWorkItemProgressions(ids, startDate, endDate).ConfigureAwait(false);
 
             return new ActivityBreakdownDto
@@ -48,7 +47,7 @@ namespace Service.Services
                 Regular = progress.Sum(_ => _.Type == WorkItemType.Regular ? _.Progress.Current : 0),
                 Recurring = progress.Sum(_ => _.Type == WorkItemType.Recurring ? _.Progress.Current : 0),
                 Interruption = progress.Sum(_ => _.Type == WorkItemType.Interruption ? _.Progress.Current : 0),
-                Overlearning = sessions.Sum(_ => _.OverlearningHours)
+                Overlearning = await FocusSessionService.GetOverlearningHoursByDateRange(startDate, endDate).ConfigureAwait(false)
             };
         }
 
@@ -56,10 +55,9 @@ namespace Service.Services
         {
             var endDate = end ?? DateTime.UtcNow;
             var startDate = start ?? endDate.AddDays(-14);
-            var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(startDate, endDate).ConfigureAwait(false);
-            var ids = sessions.SelectMany(_ => _.WorkItemIds).Distinct().ToList();
-            var overallProgresses = await WorkItemRepository.GetWorkItemProgressions(ids, null, null).ConfigureAwait(false);
+            var ids = await FocusSessionService.GetSessionWorkItemsByDateRange(startDate, endDate).ConfigureAwait(false);
             var currentProgresses = await WorkItemRepository.GetWorkItemProgressions(ids, startDate, endDate).ConfigureAwait(false);
+            var overallProgresses = await WorkItemRepository.GetWorkItemProgressions(ids, null, null).ConfigureAwait(false);
             var overallLookup = overallProgresses.ToDictionary(_ => _.Id);
             var breakdown = new EstimationBreakdownDto();
 
