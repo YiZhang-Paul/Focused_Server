@@ -31,5 +31,12 @@ namespace WebApi.Controllers
         {
             return await PerformanceService.GetActivityBreakdownByDateRange(start, end).ConfigureAwait(false);
         }
+
+        [HttpGet]
+        [Route("estimation-breakdown")]
+        public async Task<EstimationBreakdownDto> GetEstimationBreakdown([FromQuery]DateTime? start, [FromQuery]DateTime? end)
+        {
+            return await PerformanceService.GetEstimationBreakdownByDateRange(start, end).ConfigureAwait(false);
+        }
     }
 }

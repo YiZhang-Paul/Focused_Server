@@ -51,5 +51,40 @@ namespace Service.Services
                 Overlearning = sessions.Sum(_ => _.OverlearningHours)
             };
         }
+
+        public async Task<EstimationBreakdownDto> GetEstimationBreakdownByDateRange(DateTime? start, DateTime? end)
+        {
+            var endDate = end ?? DateTime.UtcNow;
+            var startDate = start ?? endDate.AddDays(-14);
+            var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(startDate, endDate).ConfigureAwait(false);
+            var ids = sessions.SelectMany(_ => _.WorkItemIds).Distinct().ToList();
+            var overallProgresses = await WorkItemRepository.GetWorkItemProgressions(ids, null, null).ConfigureAwait(false);
+            var currentProgresses = await WorkItemRepository.GetWorkItemProgressions(ids, startDate, endDate).ConfigureAwait(false);
+            var overallLookup = overallProgresses.ToDictionary(_ => _.Id);
+            var breakdown = new EstimationBreakdownDto();
+
+            foreach (var progression in currentProgresses)
+            {
+                var overallProgress = overallLookup[progression.Id].Progress;
+                var currentProgress = progression.Progress;
+
+                if (overallProgress.Current >= overallProgress.Target)
+                {
+                    var underestimate = Math.Min(currentProgress.Current, overallProgress.Current - overallProgress.Target);
+                    breakdown.Normal += currentProgress.Current - underestimate;
+                    breakdown.Underestimate += underestimate;
+
+                    continue;
+                }
+
+                var remaining = overallProgress.Target - overallProgress.Current;
+                var remainingPercentage = remaining / overallProgress.Target;
+                var isOverestimate = remaining > 3 || (overallProgress.Target > 0.5 && remainingPercentage >= 0.6);
+                breakdown.Normal += currentProgress.Current;
+                breakdown.Overestimate += overallProgress.IsCompleted && isOverestimate ? remaining : 0;
+            }
+
+            return breakdown;
+        }
     }
 }
