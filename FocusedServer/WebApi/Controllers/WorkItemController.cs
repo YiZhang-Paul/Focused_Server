@@ -36,7 +36,7 @@ namespace WebApi.Controllers
         [Route("summaries")]
         public async Task<List<WorkItemDto>> GetWorkItemSummaries([FromBody]WorkItemQuery query)
         {
-            return await WorkItemService.GetWorkItems(query).ConfigureAwait(false);
+            return await WorkItemService.GetWorkItemMetas(query).ConfigureAwait(false);
         }
     }
 }

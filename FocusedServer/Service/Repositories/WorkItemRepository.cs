@@ -16,12 +16,12 @@ namespace Service.Repositories
     {
         public WorkItemRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(WorkItem).Name) { }
 
-        public async Task<WorkItemDto> GetWorkItem(string id)
+        public async Task<WorkItemDto> GetWorkItemMeta(string id)
         {
             return ToWorkItemDto(await Get(id).ConfigureAwait(false));
         }
 
-        public async Task<List<WorkItemDto>> GetWorkItems(WorkItemQuery query)
+        public async Task<List<WorkItemDto>> GetWorkItemMetas(WorkItemQuery query)
         {
             return await Collection.Find(GetFilter(query))
                 .Skip(query.Skip)

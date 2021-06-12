@@ -57,12 +57,12 @@ namespace Service.Services
                 return null;
             }
 
-            return await WorkItemRepository.GetWorkItem(item.Id).ConfigureAwait(false);
+            return await WorkItemRepository.GetWorkItemMeta(item.Id).ConfigureAwait(false);
         }
 
-        public async Task<List<WorkItemDto>> GetWorkItems(WorkItemQuery query)
+        public async Task<List<WorkItemDto>> GetWorkItemMetas(WorkItemQuery query)
         {
-            return await WorkItemRepository.GetWorkItems(query).ConfigureAwait(false);
+            return await WorkItemRepository.GetWorkItemMetas(query).ConfigureAwait(false);
         }
     }
 }
