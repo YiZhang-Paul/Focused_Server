@@ -16,37 +16,17 @@ namespace Service.Repositories
     {
         public WorkItemRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(WorkItem).Name) { }
 
+        public async Task<WorkItemDto> GetWorkItem(string id)
+        {
+            return ToWorkItemDto(await Get(id).ConfigureAwait(false));
+        }
+
         public async Task<List<WorkItemDto>> GetWorkItems(WorkItemQuery query)
         {
             return await Collection.Find(GetFilter(query))
                 .Skip(query.Skip)
                 .Limit(query.Limit)
-                .Project(_ => new WorkItemDto
-                {
-                    Id = _.Id,
-                    Name = _.Name,
-                    Type = _.Type,
-                    Priority = _.Priority,
-                    Status = _.Status,
-                    ItemProgress = new ProgressionCounter<double>
-                    {
-                        Current = GetTotalTime(_.TimeSeries, null, null),
-                        Target = _.EstimatedHours,
-                        IsCompleted = _.Status == WorkItemStatus.Completed
-                    },
-                    SubtaskProgress = new ProgressionCounter<int>
-                    {
-                        Current = _.Subtasks.Count(task => task.Status == WorkItemStatus.Completed),
-                        Target = _.Subtasks.Count,
-                        IsCompleted = _.Subtasks.All(task => task.Status == WorkItemStatus.Completed)
-                    },
-                    ChecklistProgress = new ProgressionCounter<int>
-                    {
-                        Current = _.Checklist.Count(entry => entry.IsCompleted),
-                        Target = _.Checklist.Count,
-                        IsCompleted = _.Checklist.All(entry => entry.IsCompleted)
-                    }
-                })
+                .Project(_ => ToWorkItemDto(_))
                 .ToListAsync()
                 .ConfigureAwait(false);
         }
@@ -111,6 +91,36 @@ namespace Service.Repositories
             }
 
             return filter;
+        }
+
+        private WorkItemDto ToWorkItemDto(WorkItem item)
+        {
+            return new WorkItemDto
+            {
+                Id = item.Id,
+                Name = item.Name,
+                Type = item.Type,
+                Priority = item.Priority,
+                Status = item.Status,
+                ItemProgress = new ProgressionCounter<double>
+                {
+                    Current = GetTotalTime(item.TimeSeries, null, null),
+                    Target = item.EstimatedHours,
+                    IsCompleted = item.Status == WorkItemStatus.Completed
+                },
+                SubtaskProgress = new ProgressionCounter<int>
+                {
+                    Current = item.Subtasks.Count(_ => _.Status == WorkItemStatus.Completed),
+                    Target = item.Subtasks.Count,
+                    IsCompleted = item.Subtasks.All(_ => _.Status == WorkItemStatus.Completed)
+                },
+                ChecklistProgress = new ProgressionCounter<int>
+                {
+                    Current = item.Checklist.Count(_ => _.IsCompleted),
+                    Target = item.Checklist.Count,
+                    IsCompleted = item.Checklist.All(_ => _.IsCompleted)
+                }
+            };
         }
 
         private double GetTotalTime(TimeSeries series, DateTime? start, DateTime? end)

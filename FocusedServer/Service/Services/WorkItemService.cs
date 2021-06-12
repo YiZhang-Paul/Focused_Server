@@ -37,13 +37,13 @@ namespace Service.Services
             }
         }
 
-        public async Task<bool> UpdateWorkItemMeta(WorkItemDto item, string id)
+        public async Task<WorkItemDto> UpdateWorkItemMeta(WorkItemDto item, string id)
         {
             var workItem = await WorkItemRepository.Get(id).ConfigureAwait(false);
 
             if (workItem == null)
             {
-                return false;
+                return null;
             }
 
             workItem.Name = item.Name;
@@ -52,7 +52,12 @@ namespace Service.Services
             workItem.Status = item.Status;
             workItem.EstimatedHours = item.ItemProgress.Target;
 
-            return await WorkItemRepository.Replace(workItem).ConfigureAwait(false) != null;
+            if (await WorkItemRepository.Replace(workItem).ConfigureAwait(false) == null)
+            {
+                return null;
+            }
+
+            return await WorkItemRepository.GetWorkItem(item.Id).ConfigureAwait(false);
         }
 
         public async Task<List<WorkItemDto>> GetWorkItems(WorkItemQuery query)
