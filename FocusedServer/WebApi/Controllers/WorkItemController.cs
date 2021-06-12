@@ -25,6 +25,13 @@ namespace WebApi.Controllers
             return await WorkItemService.CreateWorkItem(item).ConfigureAwait(false);
         }
 
+        [HttpGet]
+        [Route("{id}")]
+        public async Task<WorkItem> GetWorkItem(string id)
+        {
+            return await WorkItemService.GetWorkItem(id).ConfigureAwait(false);
+        }
+
         [HttpPut]
         [Route("{id}/meta")]
         public async Task<WorkItemDto> UpdateWorkItemMeta([FromBody]WorkItemDto item, string id)
