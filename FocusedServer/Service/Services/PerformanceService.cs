@@ -3,6 +3,7 @@ using Core.Enums;
 using Core.Models.Generic;
 using Service.Repositories;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -35,12 +36,26 @@ namespace Service.Services
             };
         }
 
+        public async Task<List<ActivityBreakdownDto>> GetActivityBreakdownByDays(DateTime start, DateTime end)
+        {
+            if (start.Date > end.Date)
+            {
+                return new List<ActivityBreakdownDto>();
+            }
+
+            var total = (end.Date - start.Date).Days;
+            var days = Enumerable.Range(0, total).Select(_ => start.Date.AddDays(_));
+            var tasks = days.Select(async _ => await GetActivityBreakdownByDateRange(_, _.AddDays(1)).ConfigureAwait(false));
+
+            return (await Task.WhenAll(tasks).ConfigureAwait(false)).ToList();
+        }
+
         public async Task<ActivityBreakdownDto> GetActivityBreakdownByDateRange(DateTime? start, DateTime? end)
         {
             var endDate = end ?? DateTime.UtcNow;
             var startDate = start ?? endDate.AddDays(-14);
             var ids = await FocusSessionService.GetSessionWorkItemsByDateRange(startDate, endDate).ConfigureAwait(false);
-            var progress = await WorkItemRepository.GetWorkItemProgressions(ids, startDate, endDate).ConfigureAwait(false);
+            var progress = await WorkItemRepository.GetWorkItemProgressionByDateRange(ids, startDate, endDate).ConfigureAwait(false);
 
             return new ActivityBreakdownDto
             {
@@ -56,8 +71,8 @@ namespace Service.Services
             var endDate = end ?? DateTime.UtcNow;
             var startDate = start ?? endDate.AddDays(-14);
             var ids = await FocusSessionService.GetSessionWorkItemsByDateRange(startDate, endDate).ConfigureAwait(false);
-            var currentProgresses = await WorkItemRepository.GetWorkItemProgressions(ids, startDate, endDate).ConfigureAwait(false);
-            var overallProgresses = await WorkItemRepository.GetWorkItemProgressions(ids, null, null).ConfigureAwait(false);
+            var currentProgresses = await WorkItemRepository.GetWorkItemProgressionByDateRange(ids, startDate, endDate).ConfigureAwait(false);
+            var overallProgresses = await WorkItemRepository.GetWorkItemProgressionByDateRange(ids, null, null).ConfigureAwait(false);
             var overallLookup = overallProgresses.ToDictionary(_ => _.Id);
             var breakdown = new EstimationBreakdownDto();
 

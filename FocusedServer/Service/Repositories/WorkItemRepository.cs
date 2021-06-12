@@ -31,7 +31,7 @@ namespace Service.Repositories
                 .ConfigureAwait(false);
         }
 
-        public async Task<List<WorkItemProgressionDto>> GetWorkItemProgressions(List<string> ids, DateTime? start, DateTime? end)
+        public async Task<List<WorkItemProgressionDto>> GetWorkItemProgressionByDateRange(List<string> ids, DateTime? start, DateTime? end)
         {
             var filter = Builders<WorkItem>.Filter.In(_ => _.Id, ids);
 
