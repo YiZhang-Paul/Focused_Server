@@ -32,6 +32,13 @@ namespace WebApi.Controllers
             return await WorkItemService.GetWorkItem(id).ConfigureAwait(false);
         }
 
+        [HttpDelete]
+        [Route("{id}")]
+        public async Task<bool> DeleteWorkItem(string id)
+        {
+            return await WorkItemService.DeleteWorkItem(id).ConfigureAwait(false);
+        }
+
         [HttpPut]
         [Route("{id}/meta")]
         public async Task<WorkItemDto> UpdateWorkItemMeta([FromBody]WorkItemDto item, string id)
