@@ -1,6 +1,7 @@
 using Core.Dtos;
 using Core.Models.WorkItem;
 using Service.Repositories;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -44,6 +45,8 @@ namespace Service.Services
 
         public async Task<WorkItem> UpdateWorkItem(WorkItem item)
         {
+            item.TimeInfo.LastModified = DateTime.UtcNow;
+
             return await WorkItemRepository.Replace(item).ConfigureAwait(false);
         }
 
