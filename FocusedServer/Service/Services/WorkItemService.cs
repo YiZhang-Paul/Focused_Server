@@ -75,6 +75,11 @@ namespace Service.Services
             return await WorkItemRepository.GetWorkItemMeta(item.Id).ConfigureAwait(false);
         }
 
+        public async Task<WorkItemDto> GetWorkItemMeta(string id)
+        {
+            return await WorkItemRepository.GetWorkItemMeta(id).ConfigureAwait(false);
+        }
+
         public async Task<List<WorkItemDto>> GetWorkItemMetas(WorkItemQuery query)
         {
             return await WorkItemRepository.GetWorkItemMetas(query).ConfigureAwait(false);
