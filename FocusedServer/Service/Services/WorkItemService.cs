@@ -42,6 +42,11 @@ namespace Service.Services
             return await WorkItemRepository.Get(id).ConfigureAwait(false);
         }
 
+        public async Task<WorkItem> UpdateWorkItem(WorkItem item)
+        {
+            return await WorkItemRepository.Replace(item).ConfigureAwait(false);
+        }
+
         public async Task<bool> DeleteWorkItem(string id)
         {
             return await WorkItemRepository.Delete(id).ConfigureAwait(false);
