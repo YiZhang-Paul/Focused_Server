@@ -16,7 +16,7 @@ namespace Service.Services
             WorkItemRepository = workItemRepository;
         }
 
-        public async Task<bool> CreateWorkItem(WorkItemDto item)
+        public async Task<string> CreateWorkItem(WorkItemDto item)
         {
             try
             {
@@ -28,13 +28,11 @@ namespace Service.Services
                     EstimatedHours = item.ItemProgress.Target
                 };
 
-                await WorkItemRepository.Add(workItem).ConfigureAwait(false);
-
-                return true;
+                return await WorkItemRepository.Add(workItem).ConfigureAwait(false);
             }
             catch
             {
-                return false;
+                return null;
             }
         }
 
