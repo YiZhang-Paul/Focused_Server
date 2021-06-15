@@ -1,9 +1,12 @@
 using Core.Enums;
 using Core.Models.Generic;
+using MongoDB.Bson.Serialization.Attributes;
+using System;
 using System.Collections.Generic;
 
 namespace Core.Models.WorkItem
 {
+    [BsonIgnoreExtraElements]
     public class WorkItem : DatabaseEntry
     {
         public string Parent { get; set; } = null;
@@ -15,6 +18,7 @@ namespace Core.Models.WorkItem
         public WorkItemStatus Status { get; set; } = WorkItemStatus.Idle;
         public double EstimatedHours { get; set; }
         public TimeSeries TimeSeries { get; set; } = new TimeSeries();
+        public DateTime? DueDate { get; set; }
         public bool[] Recur { get; set; } = new bool[7];
         public List<ChecklistEntry> Checklist { get; set; } = new List<ChecklistEntry>();
         public TimeInfo TimeInfo { get; set; } = new TimeInfo();
