@@ -102,6 +102,7 @@ namespace Service.Repositories
                 Type = item.Type,
                 Priority = item.Priority,
                 Status = item.Status,
+                DueDate = item.DueDate,
                 ItemProgress = new ProgressionCounter<double>
                 {
                     Current = GetTotalTime(item.TimeSeries, null, null),
