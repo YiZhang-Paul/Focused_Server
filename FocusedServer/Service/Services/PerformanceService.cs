@@ -109,7 +109,7 @@ namespace Service.Services
             return new DueDateBreakdownDto
             {
                 PastDue = (int)await WorkItemRepository.GetPastDueWorkItemsCount(startDate, endDate).ConfigureAwait(false),
-                Looming = (int)await WorkItemRepository.GetLoomingWorkItemsCount(startDate, endDate.AddHours(24)).ConfigureAwait(false)
+                Looming = (int)await WorkItemRepository.GetLoomingWorkItemsCount(startDate, endDate.AddDays(1)).ConfigureAwait(false)
             };
         }
     }
