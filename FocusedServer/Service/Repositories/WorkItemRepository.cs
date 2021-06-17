@@ -34,15 +34,14 @@ namespace Service.Repositories
             return await Collection.CountDocumentsAsync(filter).ConfigureAwait(false);
         }
 
-        public async Task<long> GetLoomingWorkItemsCount(DateTime start, DateTime end, double threshold = 24)
+        public async Task<long> GetLoomingWorkItemsCount(DateTime start, DateTime end)
         {
             var builder = Builders<WorkItem>.Filter;
 
             var filter = builder.And(
                 builder.Gte(_ => _.DueDate, start),
                 builder.Lte(_ => _.DueDate, end),
-                builder.Gt(_ => _.DueDate, DateTime.UtcNow),
-                builder.Lte(_ => _.DueDate, DateTime.UtcNow.AddHours(threshold))
+                builder.Gt(_ => _.DueDate, DateTime.UtcNow)
             );
 
             return await Collection.CountDocumentsAsync(filter).ConfigureAwait(false);
