@@ -51,5 +51,12 @@ namespace WebApi.Controllers
         {
             return await PerformanceService.GetEstimationBreakdownByDateRange(start, end).ConfigureAwait(false);
         }
+
+        [HttpGet]
+        [Route("due-date-breakdown")]
+        public async Task<DueDateBreakdownDto> GetDueDateBreakdown([FromQuery]DateTime? start, [FromQuery]DateTime? end)
+        {
+            return await PerformanceService.GetDueDateBreakdownByDateRange(start, end).ConfigureAwait(false);
+        }
     }
 }

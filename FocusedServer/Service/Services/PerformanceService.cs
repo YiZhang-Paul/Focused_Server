@@ -12,6 +12,7 @@ namespace Service.Services
     public class PerformanceService
     {
         private const double DailyTarget = 8;
+        private const double DefaultPeriod = 14;
         private WorkItemRepository WorkItemRepository { get; set; }
         private FocusSessionService FocusSessionService { get; set; }
 
@@ -53,7 +54,7 @@ namespace Service.Services
         public async Task<ActivityBreakdownDto> GetActivityBreakdownByDateRange(DateTime? start, DateTime? end)
         {
             var endDate = end ?? DateTime.UtcNow;
-            var startDate = start ?? endDate.AddDays(-14);
+            var startDate = start ?? endDate.AddDays(-DefaultPeriod);
             var ids = await FocusSessionService.GetSessionWorkItemsByDateRange(startDate, endDate).ConfigureAwait(false);
             var progress = await WorkItemRepository.GetWorkItemProgressionByDateRange(ids, startDate, endDate).ConfigureAwait(false);
 
@@ -69,7 +70,7 @@ namespace Service.Services
         public async Task<EstimationBreakdownDto> GetEstimationBreakdownByDateRange(DateTime? start, DateTime? end)
         {
             var endDate = end ?? DateTime.UtcNow;
-            var startDate = start ?? endDate.AddDays(-14);
+            var startDate = start ?? endDate.AddDays(-DefaultPeriod);
             var ids = await FocusSessionService.GetSessionWorkItemsByDateRange(startDate, endDate).ConfigureAwait(false);
             var currentProgresses = await WorkItemRepository.GetWorkItemProgressionByDateRange(ids, startDate, endDate).ConfigureAwait(false);
             var overallProgresses = await WorkItemRepository.GetWorkItemProgressionByDateRange(ids, null, null).ConfigureAwait(false);
@@ -98,6 +99,18 @@ namespace Service.Services
             }
 
             return breakdown;
+        }
+
+        public async Task<DueDateBreakdownDto> GetDueDateBreakdownByDateRange(DateTime? start, DateTime? end)
+        {
+            var endDate = end ?? DateTime.UtcNow;
+            var startDate = start ?? endDate.AddDays(-DefaultPeriod);
+
+            return new DueDateBreakdownDto
+            {
+                PastDue = (int)await WorkItemRepository.GetPastDueWorkItemsCount(startDate, endDate).ConfigureAwait(false),
+                Looming = (int)await WorkItemRepository.GetLoomingWorkItemsCount(startDate, endDate).ConfigureAwait(false)
+            };
         }
     }
 }
