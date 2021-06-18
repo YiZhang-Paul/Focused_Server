@@ -32,6 +32,7 @@ namespace WebApi
             services.AddScoped<BreakSessionRepository, BreakSessionRepository>();
             services.AddScoped<WorkItemService, WorkItemService>();
             services.AddScoped<FocusSessionService, FocusSessionService>();
+            services.AddScoped<BreakSessionService, BreakSessionService>();
             services.AddScoped<PerformanceService, PerformanceService>();
             services.Configure<DatabaseConfiguration>(Configuration.GetSection(DatabaseConfiguration.Key));
         }
