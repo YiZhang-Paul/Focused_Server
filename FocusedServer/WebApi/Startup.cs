@@ -29,6 +29,7 @@ namespace WebApi
             services.AddControllers();
             services.AddScoped<WorkItemRepository, WorkItemRepository>();
             services.AddScoped<FocusSessionRepository, FocusSessionRepository>();
+            services.AddScoped<BreakSessionRepository, BreakSessionRepository>();
             services.AddScoped<WorkItemService, WorkItemService>();
             services.AddScoped<FocusSessionService, FocusSessionService>();
             services.AddScoped<PerformanceService, PerformanceService>();
