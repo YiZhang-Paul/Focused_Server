@@ -27,6 +27,13 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
+        [Route("daily-time-tracking/{year}/{month}/{day}")]
+        public async Task<TimeTrackingBreakdownDto> GetTimeTrackingBreakdownByDate(int year, int month, int day)
+        {
+            return await PerformanceService.GetTimeTrackingBreakdownByDate(year, month, day).ConfigureAwait(false);
+        }
+
+        [HttpGet]
         [Route("activity-breakdown")]
         public async Task<ActivityBreakdownDto> GetActivityBreakdownByDateRange([FromQuery]DateTime? start, [FromQuery]DateTime? end)
         {

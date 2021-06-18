@@ -15,11 +15,18 @@ namespace Service.Services
         private const double DefaultPeriod = 14;
         private WorkItemRepository WorkItemRepository { get; set; }
         private FocusSessionService FocusSessionService { get; set; }
+        private BreakSessionService BreakSessionService { get; set; }
 
-        public PerformanceService(WorkItemRepository workItemRepository, FocusSessionService focusSessionService)
+        public PerformanceService
+        (
+            WorkItemRepository workItemRepository,
+            FocusSessionService focusSessionService,
+            BreakSessionService breakSessionService
+        )
         {
             WorkItemRepository = workItemRepository;
             FocusSessionService = focusSessionService;
+            BreakSessionService = breakSessionService;
         }
 
         public async Task<ProgressionCounter<double>> GetFocusProgressionByDate(int year, int month, int day)
@@ -34,6 +41,22 @@ namespace Service.Services
                 Current = total,
                 Target = DailyTarget,
                 IsCompleted = total >= DailyTarget
+            };
+        }
+
+        public async Task<TimeTrackingBreakdownDto> GetTimeTrackingBreakdownByDate(int year, int month, int day)
+        {
+            var start = new DateTime(year, month, day);
+            var end = start.AddDays(1);
+            var activity = await GetActivityBreakdownByDateRange(start, end).ConfigureAwait(false);
+            var activityTime = activity.Regular + activity.Recurring + activity.Interruption + activity.Overlearning;
+            var breakTime = await BreakSessionService.GetBreakDurationByDateRange(start, end).ConfigureAwait(false);
+
+            return new TimeTrackingBreakdownDto
+            {
+                ActivityTime = activityTime,
+                BreakTime = breakTime,
+                UntrackedTime = 24 - activityTime - breakTime
             };
         }
 
