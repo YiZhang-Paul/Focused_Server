@@ -1,8 +1,11 @@
+using Core.Configurations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Service.Repositories;
+using Service.Services;
 
 namespace WebApi
 {
@@ -24,6 +27,15 @@ namespace WebApi
             });
 
             services.AddControllers();
+            services.AddScoped<WorkItemRepository, WorkItemRepository>();
+            services.AddScoped<FocusSessionRepository, FocusSessionRepository>();
+            services.AddScoped<BreakSessionRepository, BreakSessionRepository>();
+            services.AddScoped<UserProfileRepository, UserProfileRepository>();
+            services.AddScoped<WorkItemService, WorkItemService>();
+            services.AddScoped<FocusSessionService, FocusSessionService>();
+            services.AddScoped<BreakSessionService, BreakSessionService>();
+            services.AddScoped<PerformanceService, PerformanceService>();
+            services.Configure<DatabaseConfiguration>(Configuration.GetSection(DatabaseConfiguration.Key));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
