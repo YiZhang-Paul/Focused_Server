@@ -1,6 +1,6 @@
 using System;
 
-namespace Core.Models
+namespace Core.Models.TimeSession
 {
     public class BreakSession : DatabaseEntry
     {
