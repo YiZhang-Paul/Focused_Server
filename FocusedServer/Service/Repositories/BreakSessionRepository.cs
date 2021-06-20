@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Service.Repositories
 {
-    public class BreakSessionRepository : DatabaseConnector<BreakSession>
+    public class BreakSessionRepository : UserOwnedRecordRepository<BreakSession>
     {
         public BreakSessionRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(BreakSession).Name) { }
 

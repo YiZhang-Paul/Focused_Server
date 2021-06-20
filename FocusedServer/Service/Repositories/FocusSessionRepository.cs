@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Service.Repositories
 {
-    public class FocusSessionRepository : DatabaseConnector<FocusSession>
+    public class FocusSessionRepository : UserOwnedRecordRepository<FocusSession>
     {
         public FocusSessionRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(FocusSession).Name) { }
 

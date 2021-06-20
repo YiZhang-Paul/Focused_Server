@@ -12,13 +12,13 @@ using System.Threading.Tasks;
 
 namespace Service.Repositories
 {
-    public class WorkItemRepository : DatabaseConnector<WorkItem>
+    public class WorkItemRepository : UserOwnedRecordRepository<WorkItem>
     {
         public WorkItemRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(WorkItem).Name) { }
 
-        public async Task<WorkItemDto> GetWorkItemMeta(string id)
+        public async Task<WorkItemDto> GetWorkItemMeta(string userId, string id)
         {
-            return ToWorkItemDto(await Get(id).ConfigureAwait(false));
+            return ToWorkItemDto(await Get(userId, id).ConfigureAwait(false));
         }
 
         public async Task<bool> UpdateWorkItemsStatus(string userId, WorkItemStatus source, WorkItemStatus target)

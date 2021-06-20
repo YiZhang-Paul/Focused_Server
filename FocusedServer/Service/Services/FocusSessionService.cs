@@ -20,9 +20,9 @@ namespace Service.Services
             FocusSessionRepository = focusSessionRepository;
         }
 
-        public async Task<FocusSession> GetFocusSession(string id)
+        public async Task<FocusSession> GetFocusSession(string userId, string id)
         {
-            return await FocusSessionRepository.Get(id).ConfigureAwait(false);
+            return await FocusSessionRepository.Get(userId, id).ConfigureAwait(false);
         }
 
         public async Task<List<string>> GetSessionWorkItemsByDateRange(string userId, DateTime start, DateTime end)
@@ -39,9 +39,9 @@ namespace Service.Services
             return sessions.Sum(_ => _.OverlearningHours);
         }
 
-        public async Task<ActivityBreakdownDto> GetActivityBreakdownBySession(string id)
+        public async Task<ActivityBreakdownDto> GetActivityBreakdownBySession(string userId, string id)
         {
-            var session = await GetFocusSession(id).ConfigureAwait(false);
+            var session = await GetFocusSession(userId, id).ConfigureAwait(false);
 
             if (session == null)
             {

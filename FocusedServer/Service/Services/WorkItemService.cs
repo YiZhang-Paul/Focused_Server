@@ -46,9 +46,9 @@ namespace Service.Services
             }
         }
 
-        public async Task<WorkItem> GetWorkItem(string id)
+        public async Task<WorkItem> GetWorkItem(string userId, string id)
         {
-            return await WorkItemRepository.Get(id).ConfigureAwait(false);
+            return await WorkItemRepository.Get(userId, id).ConfigureAwait(false);
         }
 
         public async Task<WorkItem> UpdateWorkItem(WorkItem item)
@@ -58,14 +58,14 @@ namespace Service.Services
             return await WorkItemRepository.Replace(item).ConfigureAwait(false);
         }
 
-        public async Task<bool> DeleteWorkItem(string id)
+        public async Task<bool> DeleteWorkItem(string userId, string id)
         {
-            return await WorkItemRepository.Delete(id).ConfigureAwait(false);
+            return await WorkItemRepository.Delete(userId, id).ConfigureAwait(false);
         }
 
-        public async Task<WorkItemDto> UpdateWorkItemMeta(WorkItemDto item, string userId)
+        public async Task<WorkItemDto> UpdateWorkItemMeta(WorkItemDto item)
         {
-            var workItem = await WorkItemRepository.Get(item.Id).ConfigureAwait(false);
+            var workItem = await WorkItemRepository.Get(item.UserId, item.Id).ConfigureAwait(false);
 
             if (workItem == null)
             {
@@ -78,7 +78,7 @@ namespace Service.Services
             workItem.Status = item.Status;
             workItem.EstimatedHours = item.ItemProgress.Target;
 
-            if (item.Status == WorkItemStatus.Ongoing && !await SyncOngoingStatus(userId, item.Id).ConfigureAwait(false))
+            if (item.Status == WorkItemStatus.Ongoing && !await SyncOngoingStatus(item.UserId, item.Id).ConfigureAwait(false))
             {
                 return null;
             }
@@ -88,12 +88,12 @@ namespace Service.Services
                 return null;
             }
 
-            return await WorkItemRepository.GetWorkItemMeta(item.Id).ConfigureAwait(false);
+            return await WorkItemRepository.GetWorkItemMeta(item.UserId, item.Id).ConfigureAwait(false);
         }
 
-        public async Task<WorkItemDto> GetWorkItemMeta(string id)
+        public async Task<WorkItemDto> GetWorkItemMeta(string userId, string id)
         {
-            return await WorkItemRepository.GetWorkItemMeta(id).ConfigureAwait(false);
+            return await WorkItemRepository.GetWorkItemMeta(userId, id).ConfigureAwait(false);
         }
 
         public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, WorkItemQuery query)
@@ -112,7 +112,7 @@ namespace Service.Services
                 return false;
             }
 
-            var session = await FocusSessionRepository.Get(user.FocusSessionId).ConfigureAwait(false);
+            var session = await FocusSessionRepository.Get(user.Id, user.FocusSessionId).ConfigureAwait(false);
 
             if (session == null || session.WorkItemIds.Contains(workItemId))
             {

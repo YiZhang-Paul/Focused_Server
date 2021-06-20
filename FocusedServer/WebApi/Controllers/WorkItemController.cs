@@ -23,6 +23,8 @@ namespace WebApi.Controllers
         [Route("")]
         public async Task<string> CreateWorkItem([FromBody]WorkItemDto item)
         {
+            item.UserId = UserId;
+
             return await WorkItemService.CreateWorkItem(item).ConfigureAwait(false);
         }
 
@@ -30,7 +32,7 @@ namespace WebApi.Controllers
         [Route("{id}")]
         public async Task<WorkItem> GetWorkItem(string id)
         {
-            return await WorkItemService.GetWorkItem(id).ConfigureAwait(false);
+            return await WorkItemService.GetWorkItem(UserId, id).ConfigureAwait(false);
         }
 
         [HttpPut]
@@ -44,21 +46,21 @@ namespace WebApi.Controllers
         [Route("{id}")]
         public async Task<bool> DeleteWorkItem(string id)
         {
-            return await WorkItemService.DeleteWorkItem(id).ConfigureAwait(false);
+            return await WorkItemService.DeleteWorkItem(UserId, id).ConfigureAwait(false);
         }
 
         [HttpGet]
         [Route("{id}/meta")]
         public async Task<WorkItemDto> GetWorkItemMeta(string id)
         {
-            return await WorkItemService.GetWorkItemMeta(id).ConfigureAwait(false);
+            return await WorkItemService.GetWorkItemMeta(UserId, id).ConfigureAwait(false);
         }
 
         [HttpPut]
         [Route("meta")]
         public async Task<WorkItemDto> UpdateWorkItemMeta([FromBody]WorkItemDto item)
         {
-            return await WorkItemService.UpdateWorkItemMeta(item, UserId).ConfigureAwait(false);
+            return await WorkItemService.UpdateWorkItemMeta(item).ConfigureAwait(false);
         }
 
         [HttpPost]

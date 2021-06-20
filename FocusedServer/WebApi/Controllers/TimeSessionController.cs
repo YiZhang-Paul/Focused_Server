@@ -11,6 +11,7 @@ namespace WebApi.Controllers
     [ApiController]
     public class TimeSessionController : ControllerBase
     {
+        private const string UserId = "60cd1862629e063c384f3ea1";
         private BreakSessionRepository BreakSessionRepository { get; set; }
         private FocusSessionService FocusSessionService { get; set; }
 
@@ -24,21 +25,21 @@ namespace WebApi.Controllers
         [Route("focus-session/{id}")]
         public async Task<FocusSession> GetFocusSession(string id)
         {
-            return await FocusSessionService.GetFocusSession(id).ConfigureAwait(false);
+            return await FocusSessionService.GetFocusSession(UserId, id).ConfigureAwait(false);
         }
 
         [HttpGet]
         [Route("focus-session/{id}/activity-breakdown")]
         public async Task<ActivityBreakdownDto> GetActivityBreakdownBySession(string id)
         {
-            return await FocusSessionService.GetActivityBreakdownBySession(id).ConfigureAwait(false);
+            return await FocusSessionService.GetActivityBreakdownBySession(UserId, id).ConfigureAwait(false);
         }
 
         [HttpGet]
         [Route("break-session/{id}")]
         public async Task<BreakSession> GetBreakSession(string id)
         {
-            return await BreakSessionRepository.Get(id).ConfigureAwait(false);
+            return await BreakSessionRepository.Get(UserId, id).ConfigureAwait(false);
         }
     }
 }
