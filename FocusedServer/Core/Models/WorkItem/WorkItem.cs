@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace Core.Models.WorkItem
 {
     [BsonIgnoreExtraElements]
-    public class WorkItem : DatabaseEntry
+    public class WorkItem : UserOwnedRecord
     {
         public string Parent { get; set; } = null;
         public List<WorkItem> Subtasks { get; set; } = new List<WorkItem>();

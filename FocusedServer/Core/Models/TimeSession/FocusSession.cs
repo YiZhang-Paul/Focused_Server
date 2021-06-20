@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Core.Models.TimeSession
 {
-    public class FocusSession : DatabaseEntry
+    public class FocusSession : UserOwnedRecord
     {
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }

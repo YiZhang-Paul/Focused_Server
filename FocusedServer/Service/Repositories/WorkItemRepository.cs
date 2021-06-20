@@ -73,6 +73,7 @@ namespace Service.Repositories
                 .Project(_ => new WorkItemProgressionDto
                 {
                     Id = _.Id,
+                    UserId = _.UserId,
                     Type = _.Type,
                     Progress = new ProgressionCounter<double>
                     {
@@ -132,6 +133,7 @@ namespace Service.Repositories
             return new WorkItemDto
             {
                 Id = item.Id,
+                UserId = item.UserId,
                 Name = item.Name,
                 Type = item.Type,
                 Priority = item.Priority,

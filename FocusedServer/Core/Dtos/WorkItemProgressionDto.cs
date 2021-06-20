@@ -6,6 +6,7 @@ namespace Core.Dtos
     public class WorkItemProgressionDto
     {
         public string Id { get; set; }
+        public string UserId { get; set; }
         public WorkItemType Type { get; set; }
         public ProgressionCounter<double> Progress { get; set; }
     }

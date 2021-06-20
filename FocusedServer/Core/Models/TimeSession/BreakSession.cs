@@ -2,7 +2,7 @@ using System;
 
 namespace Core.Models.TimeSession
 {
-    public class BreakSession : DatabaseEntry
+    public class BreakSession : UserOwnedRecord
     {
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
