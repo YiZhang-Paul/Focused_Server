@@ -1,6 +1,8 @@
+using Core.Dtos;
 using Core.Models.TimeSession;
 using Microsoft.AspNetCore.Mvc;
 using Service.Repositories;
+using Service.Services;
 using System.Threading.Tasks;
 
 namespace WebApi.Controllers
@@ -9,20 +11,27 @@ namespace WebApi.Controllers
     [ApiController]
     public class TimeSessionController : ControllerBase
     {
-        private FocusSessionRepository FocusSessionRepository { get; set; }
         private BreakSessionRepository BreakSessionRepository { get; set; }
+        private FocusSessionService FocusSessionService { get; set; }
 
-        public TimeSessionController(FocusSessionRepository focusSessionRepository, BreakSessionRepository breakSessionRepository)
+        public TimeSessionController(BreakSessionRepository breakSessionRepository, FocusSessionService focusSessionService)
         {
-            FocusSessionRepository = focusSessionRepository;
             BreakSessionRepository = breakSessionRepository;
+            FocusSessionService = focusSessionService;
         }
 
         [HttpGet]
         [Route("focus-session/{id}")]
         public async Task<FocusSession> GetFocusSession(string id)
         {
-            return await FocusSessionRepository.Get(id).ConfigureAwait(false);
+            return await FocusSessionService.GetFocusSession(id).ConfigureAwait(false);
+        }
+
+        [HttpGet]
+        [Route("focus-session/{id}/activity-breakdown")]
+        public async Task<ActivityBreakdownDto> GetActivityBreakdownBySession(string id)
+        {
+            return await FocusSessionService.GetActivityBreakdownBySession(id).ConfigureAwait(false);
         }
 
         [HttpGet]
