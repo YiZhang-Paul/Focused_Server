@@ -33,7 +33,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPut]
-        [Route("{id}")]
+        [Route("")]
         public async Task<WorkItem> UpdateWorkItem([FromBody]WorkItem item)
         {
             return await WorkItemService.UpdateWorkItem(item).ConfigureAwait(false);
@@ -54,7 +54,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPut]
-        [Route("{id}/meta")]
+        [Route("meta")]
         public async Task<WorkItemDto> UpdateWorkItemMeta([FromBody]WorkItemDto item)
         {
             return await WorkItemService.UpdateWorkItemMeta(item, null).ConfigureAwait(false);
