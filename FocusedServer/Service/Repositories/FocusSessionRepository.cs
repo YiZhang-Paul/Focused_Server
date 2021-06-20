@@ -12,10 +12,10 @@ namespace Service.Repositories
     {
         public FocusSessionRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(FocusSession).Name) { }
 
-        public async Task<List<FocusSession>> GetFocusSessionsByDateRange(DateTime start, DateTime end)
+        public async Task<List<FocusSession>> GetFocusSessionsByDateRange(string userId, DateTime start, DateTime end)
         {
             var builder = Builders<FocusSession>.Filter;
-            var filter = builder.Gte(_ => _.StartTime, start) & builder.Lte(_ => _.EndTime, end);
+            var filter = builder.Eq(_ => _.UserId, userId) & builder.Gte(_ => _.StartTime, start) & builder.Lte(_ => _.EndTime, end);
 
             return await Collection.Find(filter).ToListAsync().ConfigureAwait(false);
         }

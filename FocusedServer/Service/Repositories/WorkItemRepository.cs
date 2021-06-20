@@ -21,19 +21,21 @@ namespace Service.Repositories
             return ToWorkItemDto(await Get(id).ConfigureAwait(false));
         }
 
-        public async Task<bool> UpdateWorkItemsStatus(WorkItemStatus source, WorkItemStatus target)
+        public async Task<bool> UpdateWorkItemsStatus(string userId, WorkItemStatus source, WorkItemStatus target)
         {
-            var filter = Builders<WorkItem>.Filter.Eq(_ => _.Status, source);
+            var builder = Builders<WorkItem>.Filter;
+            var filter = builder.Eq(_ => _.UserId, userId) & builder.Eq(_ => _.Status, source);
             var update = Builders<WorkItem>.Update.Set(_ => _.Status, target);
 
             return (await Collection.UpdateManyAsync(filter, update).ConfigureAwait(false)).IsAcknowledged;
         }
 
-        public async Task<long> GetPastDueWorkItemsCount(DateTime start, DateTime end)
+        public async Task<long> GetPastDueWorkItemsCount(string userId, DateTime start, DateTime end)
         {
             var builder = Builders<WorkItem>.Filter;
 
             var filter = builder.And(
+                builder.Eq(_ => _.UserId, userId),
                 builder.Gte(_ => _.DueDate, start),
                 builder.Lte(_ => _.DueDate, end),
                 builder.Lte(_ => _.DueDate, DateTime.UtcNow)
@@ -42,11 +44,12 @@ namespace Service.Repositories
             return await Collection.CountDocumentsAsync(filter).ConfigureAwait(false);
         }
 
-        public async Task<long> GetLoomingWorkItemsCount(DateTime start, DateTime end)
+        public async Task<long> GetLoomingWorkItemsCount(string userId, DateTime start, DateTime end)
         {
             var builder = Builders<WorkItem>.Filter;
 
             var filter = builder.And(
+                builder.Eq(_ => _.UserId, userId),
                 builder.Gte(_ => _.DueDate, start),
                 builder.Lte(_ => _.DueDate, end),
                 builder.Gt(_ => _.DueDate, DateTime.UtcNow)
@@ -55,9 +58,9 @@ namespace Service.Repositories
             return await Collection.CountDocumentsAsync(filter).ConfigureAwait(false);
         }
 
-        public async Task<List<WorkItemDto>> GetWorkItemMetas(WorkItemQuery query)
+        public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, WorkItemQuery query)
         {
-            return await Collection.Find(GetFilter(query))
+            return await Collection.Find(GetFilter(userId, query))
                 .Skip(query.Skip)
                 .Limit(query.Limit)
                 .Project(_ => ToWorkItemDto(_))
@@ -65,9 +68,10 @@ namespace Service.Repositories
                 .ConfigureAwait(false);
         }
 
-        public async Task<List<WorkItemProgressionDto>> GetWorkItemProgressionByDateRange(List<string> ids, DateTime? start, DateTime? end)
+        public async Task<List<WorkItemProgressionDto>> GetWorkItemProgressionByDateRange(string userId, List<string> ids, DateTime? start, DateTime? end)
         {
-            var filter = Builders<WorkItem>.Filter.In(_ => _.Id, ids);
+            var builder = Builders<WorkItem>.Filter;
+            var filter = builder.Eq(_ => _.UserId, userId) & builder.In(_ => _.Id, ids);
 
             return await Collection.Find(filter)
                 .Project(_ => new WorkItemProgressionDto
@@ -86,10 +90,10 @@ namespace Service.Repositories
                 .ConfigureAwait(false);
         }
 
-        private FilterDefinition<WorkItem> GetFilter(WorkItemQuery query)
+        private FilterDefinition<WorkItem> GetFilter(string userId, WorkItemQuery query)
         {
             var builder = Builders<WorkItem>.Filter;
-            var filter = builder.Or(builder.Eq(_ => _.Parent, null), builder.Regex(_ => _.Parent, @"^\W*$"));
+            var filter = builder.Eq(_ => _.UserId, userId) & builder.Or(builder.Eq(_ => _.Parent, null), builder.Regex(_ => _.Parent, @"^\W*$"));
 
             if (!string.IsNullOrWhiteSpace(query.SearchText))
             {

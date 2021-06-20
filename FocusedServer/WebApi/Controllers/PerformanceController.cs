@@ -12,6 +12,7 @@ namespace WebApi.Controllers
     [ApiController]
     public class PerformanceController : ControllerBase
     {
+        private const string UserId = "60cd1862629e063c384f3ea1";
         private PerformanceService PerformanceService { get; set; }
 
         public PerformanceController(PerformanceService performanceService)
@@ -23,21 +24,21 @@ namespace WebApi.Controllers
         [Route("daily-progression/{year}/{month}/{day}")]
         public async Task<ProgressionCounter<double>> GetDailyProgression(int year, int month, int day)
         {
-            return await PerformanceService.GetFocusProgressionByDate(year, month, day).ConfigureAwait(false);
+            return await PerformanceService.GetFocusProgressionByDate(UserId, year, month, day).ConfigureAwait(false);
         }
 
         [HttpGet]
         [Route("daily-time-tracking/{year}/{month}/{day}")]
         public async Task<TimeTrackingBreakdownDto> GetTimeTrackingBreakdownByDate(int year, int month, int day)
         {
-            return await PerformanceService.GetTimeTrackingBreakdownByDate(year, month, day).ConfigureAwait(false);
+            return await PerformanceService.GetTimeTrackingBreakdownByDate(UserId, year, month, day).ConfigureAwait(false);
         }
 
         [HttpGet]
         [Route("activity-breakdown")]
         public async Task<ActivityBreakdownDto> GetActivityBreakdownByDateRange([FromQuery]DateTime? start, [FromQuery]DateTime? end)
         {
-            return await PerformanceService.GetActivityBreakdownByDateRange(start, end).ConfigureAwait(false);
+            return await PerformanceService.GetActivityBreakdownByDateRange(UserId, start, end).ConfigureAwait(false);
         }
 
         [HttpGet]
@@ -49,21 +50,21 @@ namespace WebApi.Controllers
                 return new List<ActivityBreakdownDto>();
             }
 
-            return await PerformanceService.GetActivityBreakdownByDays(startDate, endDate).ConfigureAwait(false);
+            return await PerformanceService.GetActivityBreakdownByDays(UserId, startDate, endDate).ConfigureAwait(false);
         }
 
         [HttpGet]
         [Route("estimation-breakdown")]
         public async Task<EstimationBreakdownDto> GetEstimationBreakdown([FromQuery]DateTime? start, [FromQuery]DateTime? end)
         {
-            return await PerformanceService.GetEstimationBreakdownByDateRange(start, end).ConfigureAwait(false);
+            return await PerformanceService.GetEstimationBreakdownByDateRange(UserId, start, end).ConfigureAwait(false);
         }
 
         [HttpGet]
         [Route("due-date-breakdown")]
         public async Task<DueDateBreakdownDto> GetDueDateBreakdown([FromQuery]DateTime? start, [FromQuery]DateTime? end)
         {
-            return await PerformanceService.GetDueDateBreakdownByDateRange(start, end).ConfigureAwait(false);
+            return await PerformanceService.GetDueDateBreakdownByDateRange(UserId, start, end).ConfigureAwait(false);
         }
     }
 }

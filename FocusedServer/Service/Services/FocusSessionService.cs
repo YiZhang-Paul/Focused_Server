@@ -25,16 +25,16 @@ namespace Service.Services
             return await FocusSessionRepository.Get(id).ConfigureAwait(false);
         }
 
-        public async Task<List<string>> GetSessionWorkItemsByDateRange(DateTime start, DateTime end)
+        public async Task<List<string>> GetSessionWorkItemsByDateRange(string userId, DateTime start, DateTime end)
         {
-            var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(start, end).ConfigureAwait(false);
+            var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(userId, start, end).ConfigureAwait(false);
 
             return sessions.SelectMany(_ => _.WorkItemIds).Distinct().ToList();
         }
 
-        public async Task<double> GetOverlearningHoursByDateRange(DateTime start, DateTime end)
+        public async Task<double> GetOverlearningHoursByDateRange(string userId, DateTime start, DateTime end)
         {
-            var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(start, end).ConfigureAwait(false);
+            var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(userId, start, end).ConfigureAwait(false);
 
             return sessions.Sum(_ => _.OverlearningHours);
         }
@@ -51,7 +51,7 @@ namespace Service.Services
             var ids = session.WorkItemIds;
             var start = session.StartTime;
             var end = session.EndTime;
-            var progress = await WorkItemRepository.GetWorkItemProgressionByDateRange(ids, start, end).ConfigureAwait(false);
+            var progress = await WorkItemRepository.GetWorkItemProgressionByDateRange(session.UserId, ids, start, end).ConfigureAwait(false);
 
             return new ActivityBreakdownDto
             {

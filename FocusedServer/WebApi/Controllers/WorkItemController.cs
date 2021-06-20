@@ -11,6 +11,7 @@ namespace WebApi.Controllers
     [ApiController]
     public class WorkItemController : ControllerBase
     {
+        private const string UserId = "60cd1862629e063c384f3ea1";
         private WorkItemService WorkItemService { get; set; }
 
         public WorkItemController(WorkItemService workItemService)
@@ -57,14 +58,14 @@ namespace WebApi.Controllers
         [Route("meta")]
         public async Task<WorkItemDto> UpdateWorkItemMeta([FromBody]WorkItemDto item)
         {
-            return await WorkItemService.UpdateWorkItemMeta(item, null).ConfigureAwait(false);
+            return await WorkItemService.UpdateWorkItemMeta(item, UserId).ConfigureAwait(false);
         }
 
         [HttpPost]
         [Route("summaries")]
         public async Task<List<WorkItemDto>> GetWorkItemSummaries([FromBody]WorkItemQuery query)
         {
-            return await WorkItemService.GetWorkItemMetas(query).ConfigureAwait(false);
+            return await WorkItemService.GetWorkItemMetas(UserId, query).ConfigureAwait(false);
         }
     }
 }
