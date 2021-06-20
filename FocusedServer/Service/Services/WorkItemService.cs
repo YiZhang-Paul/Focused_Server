@@ -1,4 +1,6 @@
 using Core.Dtos;
+using Core.Enums;
+using Core.Models.User;
 using Core.Models.WorkItem;
 using Service.Repositories;
 using System;
@@ -10,10 +12,12 @@ namespace Service.Services
     public class WorkItemService
     {
         private WorkItemRepository WorkItemRepository { get; set; }
+        private FocusSessionRepository FocusSessionRepository { get; set; }
 
-        public WorkItemService(WorkItemRepository workItemRepository)
+        public WorkItemService(WorkItemRepository workItemRepository, FocusSessionRepository focusSessionRepository)
         {
             WorkItemRepository = workItemRepository;
+            FocusSessionRepository = focusSessionRepository;
         }
 
         public async Task<string> CreateWorkItem(WorkItemDto item)
@@ -53,9 +57,9 @@ namespace Service.Services
             return await WorkItemRepository.Delete(id).ConfigureAwait(false);
         }
 
-        public async Task<WorkItemDto> UpdateWorkItemMeta(WorkItemDto item, string id)
+        public async Task<WorkItemDto> UpdateWorkItemMeta(WorkItemDto item, UserProfile user)
         {
-            var workItem = await WorkItemRepository.Get(id).ConfigureAwait(false);
+            var workItem = await WorkItemRepository.Get(item.Id).ConfigureAwait(false);
 
             if (workItem == null)
             {
@@ -67,6 +71,11 @@ namespace Service.Services
             workItem.Priority = item.Priority;
             workItem.Status = item.Status;
             workItem.EstimatedHours = item.ItemProgress.Target;
+
+            if (item.Status == WorkItemStatus.Ongoing && !await SyncOngoingStatus(user, item.Id).ConfigureAwait(false))
+            {
+                return null;
+            }
 
             if (await WorkItemRepository.Replace(workItem).ConfigureAwait(false) == null)
             {
@@ -84,6 +93,28 @@ namespace Service.Services
         public async Task<List<WorkItemDto>> GetWorkItemMetas(WorkItemQuery query)
         {
             return await WorkItemRepository.GetWorkItemMetas(query).ConfigureAwait(false);
+        }
+
+        private async Task<bool> SyncOngoingStatus(UserProfile user, string id)
+        {
+            var source = WorkItemStatus.Ongoing;
+            var target = WorkItemStatus.Highlighted;
+
+            if (string.IsNullOrWhiteSpace(user.FocusSessionId) || await WorkItemRepository.UpdateWorkItemsStatus(source, target).ConfigureAwait(false))
+            {
+                return false;
+            }
+
+            var session = await FocusSessionRepository.Get(user.FocusSessionId).ConfigureAwait(false);
+
+            if (session == null || session.WorkItemIds.Contains(id))
+            {
+                return session != null;
+            }
+
+            session.WorkItemIds.Add(id);
+
+            return await FocusSessionRepository.Replace(session).ConfigureAwait(false) != null;
         }
     }
 }

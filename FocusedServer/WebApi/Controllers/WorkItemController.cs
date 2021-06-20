@@ -55,9 +55,9 @@ namespace WebApi.Controllers
 
         [HttpPut]
         [Route("{id}/meta")]
-        public async Task<WorkItemDto> UpdateWorkItemMeta([FromBody]WorkItemDto item, string id)
+        public async Task<WorkItemDto> UpdateWorkItemMeta([FromBody]WorkItemDto item)
         {
-            return await WorkItemService.UpdateWorkItemMeta(item, id).ConfigureAwait(false);
+            return await WorkItemService.UpdateWorkItemMeta(item, null).ConfigureAwait(false);
         }
 
         [HttpPost]

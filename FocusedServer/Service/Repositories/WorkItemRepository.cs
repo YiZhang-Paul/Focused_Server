@@ -21,7 +21,7 @@ namespace Service.Repositories
             return ToWorkItemDto(await Get(id).ConfigureAwait(false));
         }
 
-        public async Task<bool> UpdateWorkItemStatus(WorkItemStatus source, WorkItemStatus target)
+        public async Task<bool> UpdateWorkItemsStatus(WorkItemStatus source, WorkItemStatus target)
         {
             var filter = Builders<WorkItem>.Filter.Eq(_ => _.Status, source);
             var update = Builders<WorkItem>.Update.Set(_ => _.Status, target);
