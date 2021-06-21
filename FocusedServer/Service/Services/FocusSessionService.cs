@@ -1,6 +1,5 @@
 using Core.Dtos;
 using Core.Enums;
-using Core.Models.TimeSession;
 using Service.Repositories;
 using System;
 using System.Collections.Generic;
@@ -20,9 +19,32 @@ namespace Service.Services
             FocusSessionRepository = focusSessionRepository;
         }
 
-        public async Task<FocusSession> GetFocusSession(string userId, string id)
+        public async Task<FocusSessionDto> GetFocusSessionMeta(string userId, string id)
         {
-            return await FocusSessionRepository.Get(userId, id).ConfigureAwait(false);
+            var session = await FocusSessionRepository.Get(userId, id).ConfigureAwait(false);
+
+            if (session == null)
+            {
+                return null;
+            }
+
+            var progress = await WorkItemRepository.GetWorkItemProgressionByDateRange(session.UserId, session.WorkItemIds, session.StartTime, session.EndTime).ConfigureAwait(false);
+
+            return new FocusSessionDto
+            {
+                Id = session.Id,
+                UserId = session.UserId,
+                StartTime = session.StartTime,
+                EndTime = session.EndTime,
+                Activities = new ActivityBreakdownDto
+                {
+                    Regular = progress.Sum(_ => _.Type == WorkItemType.Regular ? _.Progress.Current : 0),
+                    Recurring = progress.Sum(_ => _.Type == WorkItemType.Recurring ? _.Progress.Current : 0),
+                    Interruption = progress.Sum(_ => _.Type == WorkItemType.Interruption ? _.Progress.Current : 0),
+                    Overlearning = session.OverlearningHours
+                },
+                WorkItems = await WorkItemRepository.GetWorkItemMetas(userId, session.WorkItemIds).ConfigureAwait(false)
+            };
         }
 
         public async Task<List<string>> GetSessionWorkItemsByDateRange(string userId, DateTime start, DateTime end)
@@ -37,29 +59,6 @@ namespace Service.Services
             var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(userId, start, end).ConfigureAwait(false);
 
             return sessions.Sum(_ => _.OverlearningHours);
-        }
-
-        public async Task<ActivityBreakdownDto> GetActivityBreakdownBySession(string userId, string id)
-        {
-            var session = await GetFocusSession(userId, id).ConfigureAwait(false);
-
-            if (session == null)
-            {
-                return new ActivityBreakdownDto();
-            }
-
-            var ids = session.WorkItemIds;
-            var start = session.StartTime;
-            var end = session.EndTime;
-            var progress = await WorkItemRepository.GetWorkItemProgressionByDateRange(session.UserId, ids, start, end).ConfigureAwait(false);
-
-            return new ActivityBreakdownDto
-            {
-                Regular = progress.Sum(_ => _.Type == WorkItemType.Regular ? _.Progress.Current : 0),
-                Recurring = progress.Sum(_ => _.Type == WorkItemType.Recurring ? _.Progress.Current : 0),
-                Interruption = progress.Sum(_ => _.Type == WorkItemType.Interruption ? _.Progress.Current : 0),
-                Overlearning = session.OverlearningHours
-            };
         }
     }
 }

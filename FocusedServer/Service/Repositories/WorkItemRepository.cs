@@ -59,6 +59,14 @@ namespace Service.Repositories
             return await Collection.CountDocumentsAsync(filter).ConfigureAwait(false);
         }
 
+        public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, List<string> ids)
+        {
+            var builder = Builders<WorkItem>.Filter;
+            var filter = builder.Eq(_ => _.UserId, userId) & builder.In(_ => _.Id, ids);
+
+            return await Collection.Find(filter).Project(_ => ToWorkItemDto(_)).ToListAsync().ConfigureAwait(false);
+        }
+
         public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, WorkItemQuery query)
         {
             return await Collection.Find(GetFilter(userId, query))

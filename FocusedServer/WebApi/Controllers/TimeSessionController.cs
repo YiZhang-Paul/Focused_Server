@@ -22,17 +22,10 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("focus-session/{id}")]
-        public async Task<FocusSession> GetFocusSession(string id)
+        [Route("focus-session/{id}/meta")]
+        public async Task<FocusSessionDto> GetFocusSessionMeta(string id)
         {
-            return await FocusSessionService.GetFocusSession(UserId, id).ConfigureAwait(false);
-        }
-
-        [HttpGet]
-        [Route("focus-session/{id}/activity-breakdown")]
-        public async Task<ActivityBreakdownDto> GetActivityBreakdownBySession(string id)
-        {
-            return await FocusSessionService.GetActivityBreakdownBySession(UserId, id).ConfigureAwait(false);
+            return await FocusSessionService.GetFocusSessionMeta(UserId, id).ConfigureAwait(false);
         }
 
         [HttpGet]
