@@ -26,8 +26,9 @@ namespace Service.Repositories
             var builder = Builders<WorkItem>.Filter;
             var filter = builder.Eq(_ => _.UserId, userId) & builder.Eq(_ => _.Status, source);
             var update = Builders<WorkItem>.Update.Set(_ => _.Status, target);
+            var result = await Collection.UpdateManyAsync(filter, update).ConfigureAwait(false);
 
-            return (await Collection.UpdateManyAsync(filter, update).ConfigureAwait(false)).IsAcknowledged;
+            return result.IsAcknowledged;
         }
 
         public async Task<long> GetPastDueWorkItemsCount(string userId, DateTime start, DateTime end)

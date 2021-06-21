@@ -77,6 +77,7 @@ namespace Service.Services
             workItem.Priority = item.Priority;
             workItem.Status = item.Status;
             workItem.EstimatedHours = item.ItemProgress.Target;
+            workItem.TimeInfo.LastModified = DateTime.UtcNow;
 
             if (item.Status == WorkItemStatus.Ongoing && !await SyncOngoingStatus(item.UserId, item.Id).ConfigureAwait(false))
             {
@@ -107,7 +108,7 @@ namespace Service.Services
             var target = WorkItemStatus.Highlighted;
             var user = await UserProfileRepository.Get(userId).ConfigureAwait(false);
 
-            if (string.IsNullOrWhiteSpace(user?.FocusSessionId) || await WorkItemRepository.UpdateWorkItemsStatus(user.Id, source, target).ConfigureAwait(false))
+            if (string.IsNullOrWhiteSpace(user?.FocusSessionId) || !await WorkItemRepository.UpdateWorkItemsStatus(user.Id, source, target).ConfigureAwait(false))
             {
                 return false;
             }
