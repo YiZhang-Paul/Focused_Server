@@ -9,7 +9,6 @@ namespace Core.Models.WorkItem
     [BsonIgnoreExtraElements]
     public class WorkItem : UserOwnedRecord
     {
-        public string Parent { get; set; } = null;
         public List<WorkItem> Subtasks { get; set; } = new List<WorkItem>();
         public string Name { get; set; }
         public string Description { get; set; }

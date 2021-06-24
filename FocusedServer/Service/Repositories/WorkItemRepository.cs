@@ -107,7 +107,7 @@ namespace Service.Repositories
         private FilterDefinition<WorkItem> GetFilter(string userId, WorkItemQuery query)
         {
             var builder = Builders<WorkItem>.Filter;
-            var filter = builder.Eq(_ => _.UserId, userId) & builder.Or(builder.Eq(_ => _.Parent, null), builder.Regex(_ => _.Parent, @"^\W*$"));
+            var filter = builder.Eq(_ => _.UserId, userId);
 
             if (!string.IsNullOrWhiteSpace(query.SearchText))
             {
