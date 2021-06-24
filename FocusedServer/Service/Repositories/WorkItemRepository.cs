@@ -1,7 +1,9 @@
 using Core.Configurations;
 using Core.Dtos;
 using Core.Enums;
+using Core.Models.Aggregates;
 using Core.Models.Generic;
+using Core.Models.TimeSession;
 using Core.Models.WorkItem;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
@@ -18,7 +20,27 @@ namespace Service.Repositories
 
         public async Task<WorkItemDto> GetWorkItemMeta(string userId, string id)
         {
-            return ToWorkItemDto(await Get(userId, id).ConfigureAwait(false));
+            var builder = Builders<WorkItem>.Filter;
+            var filter = builder.Eq(_ => _.UserId, userId) & builder.Eq(_ => _.Id, id);
+            var aggregate = GetWorkItemWithTimeSeriesAggregate(filter);
+
+            return await aggregate.Project(_ => ToWorkItemDto(_)).FirstOrDefaultAsync().ConfigureAwait(false);
+        }
+
+        public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, List<string> ids)
+        {
+            var builder = Builders<WorkItem>.Filter;
+            var filter = builder.Eq(_ => _.UserId, userId) & builder.In(_ => _.Id, ids);
+            var aggregate = GetWorkItemWithTimeSeriesAggregate(filter);
+
+            return await aggregate.Project(_ => ToWorkItemDto(_)).ToListAsync().ConfigureAwait(false);
+        }
+
+        public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, WorkItemQuery query)
+        {
+            var aggregate = GetWorkItemWithTimeSeriesAggregate(GetFilter(userId, query), query.Skip, query.Limit);
+
+            return await aggregate.Project(_ => ToWorkItemDto(_)).ToListAsync().ConfigureAwait(false);
         }
 
         public async Task<bool> UpdateWorkItemsStatus(string userId, WorkItemStatus source, WorkItemStatus target)
@@ -59,30 +81,12 @@ namespace Service.Repositories
             return await Collection.CountDocumentsAsync(filter).ConfigureAwait(false);
         }
 
-        public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, List<string> ids)
+        public async Task<List<WorkItemProgressionDto>> GetWorkItemProgressionByDateRange(string userId, List<string> ids, DateTime start, DateTime end)
         {
             var builder = Builders<WorkItem>.Filter;
             var filter = builder.Eq(_ => _.UserId, userId) & builder.In(_ => _.Id, ids);
 
-            return await Collection.Find(filter).Project(_ => ToWorkItemDto(_)).ToListAsync().ConfigureAwait(false);
-        }
-
-        public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, WorkItemQuery query)
-        {
-            return await Collection.Find(GetFilter(userId, query))
-                .Skip(query.Skip)
-                .Limit(query.Limit)
-                .Project(_ => ToWorkItemDto(_))
-                .ToListAsync()
-                .ConfigureAwait(false);
-        }
-
-        public async Task<List<WorkItemProgressionDto>> GetWorkItemProgressionByDateRange(string userId, List<string> ids, DateTime? start, DateTime? end)
-        {
-            var builder = Builders<WorkItem>.Filter;
-            var filter = builder.Eq(_ => _.UserId, userId) & builder.In(_ => _.Id, ids);
-
-            return await Collection.Find(filter)
+            return await GetWorkItemWithTimeSeriesAggregate(filter)
                 .Project(_ => new WorkItemProgressionDto
                 {
                     Id = _.Id,
@@ -141,7 +145,15 @@ namespace Service.Repositories
             return filter;
         }
 
-        private WorkItemDto ToWorkItemDto(WorkItem item)
+        private IAggregateFluent<WorkItemWithTimeSeries> GetWorkItemWithTimeSeriesAggregate(FilterDefinition<WorkItem> filter, int skip = 0, int limit = 0)
+        {
+            var aggregate = Collection.Aggregate().Match(filter).Skip(skip).Limit(limit);
+            var foreignCollection = Connect<TimeSeries>(typeof(TimeSeries).Name);
+
+            return aggregate.Lookup(foreignCollection, _ => _.Id, _ => _.DataSourceId, (WorkItemWithTimeSeries _) => _.TimeSeries);
+        }
+
+        private static WorkItemDto ToWorkItemDto(WorkItemWithTimeSeries item)
         {
             return new WorkItemDto
             {
@@ -154,7 +166,7 @@ namespace Service.Repositories
                 DueDate = item.DueDate,
                 ItemProgress = new ProgressionCounter<double>
                 {
-                    Current = GetTotalTime(item.TimeSeries, null, null),
+                    Current = GetTotalTime(item.TimeSeries, item.TimeInfo.Created, DateTime.UtcNow),
                     Target = item.EstimatedHours,
                     IsCompleted = item.Status == WorkItemStatus.Completed
                 },
@@ -173,37 +185,16 @@ namespace Service.Repositories
             };
         }
 
-        private double GetTotalTime(TimeSeries series, DateTime? start, DateTime? end)
+        private static double GetTotalTime(List<TimeSeries> series, DateTime start, DateTime end)
         {
-            var total = series.ManualTracking;
-            var autoTracking = series.AutoTracking.Take(series.AutoTracking.Count / 2 * 2).ToList();
-
-            for (var i = 0; i < autoTracking.Count - 1; i += 2)
+            return series.Aggregate(0d, (total, record) =>
             {
-                var begin = autoTracking[i];
-                var stop = autoTracking[i + 1];
+                record.EndTime ??= DateTime.UtcNow < end ? DateTime.UtcNow : end;
+                var rangeStart = start > record.StartTime ? start : record.StartTime;
+                var rangeEnd = end < record.EndTime ? end : record.EndTime.Value;
 
-                if (IsValidTimeEvent(begin, TimeEventType.Begin, start, end) && IsValidTimeEvent(stop, TimeEventType.Stop, start, end))
-                {
-                    total += (stop.Time - begin.Time).TotalHours;
-                }
-            }
-
-            if (series.AutoTracking.Any() && IsValidTimeEvent(series.AutoTracking.Last(), TimeEventType.Begin, start, end))
-            {
-                var now = end.HasValue && end < DateTime.UtcNow ? end.Value : DateTime.UtcNow;
-                total += (now - series.AutoTracking.Last().Time).TotalHours;
-            }
-
-            return total;
-        }
-
-        private bool IsValidTimeEvent(TimeEvent timeEvent, TimeEventType type, DateTime? start, DateTime? end)
-        {
-            var isValidStart = !start.HasValue || timeEvent.Time >= start;
-            var isValidEnd = !end.HasValue || timeEvent.Time <= end;
-
-            return isValidStart && isValidEnd && timeEvent.Type == type;
+                return total + Math.Max(0, (rangeEnd - rangeStart).TotalHours);
+            });
         }
     }
 }
