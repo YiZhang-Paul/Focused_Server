@@ -7,18 +7,18 @@ namespace Service.Repositories
 {
     public class DatabaseConnector<T> where T : DatabaseEntry
     {
+        private DatabaseConfiguration Configuration { get; set; }
         protected IMongoCollection<T> Collection { get; set; }
 
         public DatabaseConnector(IOptions<DatabaseConfiguration> configuration, string collection)
         {
-            Collection = Connect(configuration.Value, collection);
+            Configuration = configuration.Value;
+            Collection = Connect<T>(collection);
         }
 
-        private IMongoCollection<T> Connect(DatabaseConfiguration configuration, string collection)
+        protected IMongoCollection<K> Connect<K>(string collection) where K : DatabaseEntry
         {
-            var database = new MongoClient(configuration.Url).GetDatabase(configuration.Name);
-
-            return database.GetCollection<T>(collection);
+            return new MongoClient(Configuration.Url).GetDatabase(Configuration.Name).GetCollection<K>(collection);
         }
     }
 }
