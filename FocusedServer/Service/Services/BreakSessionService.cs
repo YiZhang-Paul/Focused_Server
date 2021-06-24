@@ -18,7 +18,12 @@ namespace Service.Services
         {
             var sessions = await BreakSessionRepository.GetBreakSessionByDateRange(userId, start, end).ConfigureAwait(false);
 
-            return sessions.Sum(_ => (_.EndTime - _.StartTime).TotalHours);
+            return sessions.Sum(_ =>
+            {
+                var endTime = _.EndTime ?? (DateTime.UtcNow < end ? DateTime.UtcNow : end);
+
+                return (endTime - _.StartTime).TotalHours;
+            });
         }
     }
 }

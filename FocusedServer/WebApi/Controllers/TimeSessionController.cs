@@ -29,10 +29,10 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("break-session/{id}")]
-        public async Task<BreakSession> GetBreakSession(string id)
+        [Route("active-break-session")]
+        public async Task<BreakSession> GetActiveBreakSession()
         {
-            return await BreakSessionRepository.Get(UserId, id).ConfigureAwait(false);
+            return await BreakSessionRepository.GetActiveBreakSession(UserId).ConfigureAwait(false);
         }
     }
 }
