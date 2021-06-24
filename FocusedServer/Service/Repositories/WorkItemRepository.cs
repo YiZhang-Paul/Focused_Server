@@ -23,25 +23,26 @@ namespace Service.Repositories
         {
             var builder = Builders<WorkItem>.Filter;
             var filter = builder.Eq(_ => _.UserId, userId) & builder.Eq(_ => _.Id, id);
-            var aggregate = GetWorkItemWithTimeSeriesAggregate(filter);
+            var item = await GetWorkItemWithTimeSeriesAggregate(filter).FirstOrDefaultAsync().ConfigureAwait(false);
 
-            return await aggregate.Project(_ => WorkItemUtility.ToWorkItemDto(_)).FirstOrDefaultAsync().ConfigureAwait(false);
+            return WorkItemUtility.ToWorkItemDto(item);
         }
 
         public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, List<string> ids)
         {
             var builder = Builders<WorkItem>.Filter;
             var filter = builder.Eq(_ => _.UserId, userId) & builder.In(_ => _.Id, ids);
-            var aggregate = GetWorkItemWithTimeSeriesAggregate(filter);
+            var items = await GetWorkItemWithTimeSeriesAggregate(filter).ToListAsync().ConfigureAwait(false);
 
-            return await aggregate.Project(_ => WorkItemUtility.ToWorkItemDto(_)).ToListAsync().ConfigureAwait(false);
+            return items.Select(WorkItemUtility.ToWorkItemDto).ToList();
         }
 
         public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, WorkItemQuery query)
         {
-            var aggregate = GetWorkItemWithTimeSeriesAggregate(GetFilter(userId, query), query.Skip, query.Limit);
+            var filter = GetFilter(userId, query);
+            var items = await GetWorkItemWithTimeSeriesAggregate(filter, query.Skip, query.Limit).ToListAsync().ConfigureAwait(false);
 
-            return await aggregate.Project(_ => WorkItemUtility.ToWorkItemDto(_)).ToListAsync().ConfigureAwait(false);
+            return items.Select(WorkItemUtility.ToWorkItemDto).ToList();
         }
 
         public async Task<bool> UpdateWorkItemsStatus(string userId, WorkItemStatus source, WorkItemStatus target)
@@ -86,22 +87,21 @@ namespace Service.Repositories
         {
             var builder = Builders<WorkItem>.Filter;
             var filter = builder.Eq(_ => _.UserId, userId) & builder.In(_ => _.Id, ids);
+            var items = await GetWorkItemWithTimeSeriesAggregate(filter).ToListAsync().ConfigureAwait(false);
 
-            return await GetWorkItemWithTimeSeriesAggregate(filter)
-                .Project(_ => new WorkItemProgressionDto
+            return items.Select(_ => new WorkItemProgressionDto
+            {
+                Id = _.Id,
+                UserId = _.UserId,
+                Type = _.Type,
+                Progress = new ProgressionCounter<double>
                 {
-                    Id = _.Id,
-                    UserId = _.UserId,
-                    Type = _.Type,
-                    Progress = new ProgressionCounter<double>
-                    {
-                        Current = WorkItemUtility.GetTotalTime(_.TimeSeries, start, end),
-                        Target = _.EstimatedHours,
-                        IsCompleted = _.Status == WorkItemStatus.Completed
-                    }
-                })
-                .ToListAsync()
-                .ConfigureAwait(false);
+                    Current = WorkItemUtility.GetTotalTime(_.TimeSeries, start, end),
+                    Target = _.EstimatedHours,
+                    IsCompleted = _.Status == WorkItemStatus.Completed
+                }
+            })
+            .ToList();
         }
 
         private FilterDefinition<WorkItem> GetFilter(string userId, WorkItemQuery query)
