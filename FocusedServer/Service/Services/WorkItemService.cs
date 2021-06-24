@@ -12,18 +12,11 @@ namespace Service.Services
     {
         private WorkItemRepository WorkItemRepository { get; set; }
         private FocusSessionRepository FocusSessionRepository { get; set; }
-        private UserProfileRepository UserProfileRepository { get; set; }
 
-        public WorkItemService
-        (
-            WorkItemRepository workItemRepository,
-            FocusSessionRepository focusSessionRepository,
-            UserProfileRepository userProfileRepository
-        )
+        public WorkItemService(WorkItemRepository workItemRepository, FocusSessionRepository focusSessionRepository)
         {
             WorkItemRepository = workItemRepository;
             FocusSessionRepository = focusSessionRepository;
-            UserProfileRepository = userProfileRepository;
         }
 
         public async Task<string> CreateWorkItem(WorkItemDto item)
@@ -106,18 +99,16 @@ namespace Service.Services
         {
             var source = WorkItemStatus.Ongoing;
             var target = WorkItemStatus.Highlighted;
-            var user = await UserProfileRepository.Get(userId).ConfigureAwait(false);
+            var session = await FocusSessionRepository.GetActiveFocusSession(userId).ConfigureAwait(false);
 
-            if (string.IsNullOrWhiteSpace(user?.FocusSessionId) || !await WorkItemRepository.UpdateWorkItemsStatus(user.Id, source, target).ConfigureAwait(false))
+            if (session == null || !await WorkItemRepository.UpdateWorkItemsStatus(userId, source, target).ConfigureAwait(false))
             {
                 return false;
             }
 
-            var session = await FocusSessionRepository.Get(user.Id, user.FocusSessionId).ConfigureAwait(false);
-
-            if (session == null || session.WorkItemIds.Contains(workItemId))
+            if (session.WorkItemIds.Contains(workItemId))
             {
-                return session != null;
+                return true;
             }
 
             session.WorkItemIds.Add(workItemId);

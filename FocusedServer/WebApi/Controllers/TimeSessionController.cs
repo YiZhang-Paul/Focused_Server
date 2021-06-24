@@ -22,10 +22,10 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("focus-session/{id}/meta")]
-        public async Task<FocusSessionDto> GetFocusSessionMeta(string id)
+        [Route("active-focus-session/meta")]
+        public async Task<FocusSessionDto> GetActiveFocusSessionMeta()
         {
-            return await FocusSessionService.GetFocusSessionMeta(UserId, id).ConfigureAwait(false);
+            return await FocusSessionService.GetActiveFocusSessionMeta(UserId).ConfigureAwait(false);
         }
 
         [HttpGet]

@@ -19,16 +19,16 @@ namespace Service.Services
             FocusSessionRepository = focusSessionRepository;
         }
 
-        public async Task<FocusSessionDto> GetFocusSessionMeta(string userId, string id)
+        public async Task<FocusSessionDto> GetActiveFocusSessionMeta(string userId)
         {
-            var session = await FocusSessionRepository.Get(userId, id).ConfigureAwait(false);
+            var session = await FocusSessionRepository.GetActiveFocusSession(userId).ConfigureAwait(false);
 
             if (session == null)
             {
                 return null;
             }
 
-            var progress = await WorkItemRepository.GetWorkItemProgressionByDateRange(session.UserId, session.WorkItemIds, session.StartTime, session.EndTime).ConfigureAwait(false);
+            var progress = await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, session.WorkItemIds, session.StartTime, session.EndTime).ConfigureAwait(false);
 
             return new FocusSessionDto
             {
