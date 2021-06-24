@@ -37,6 +37,7 @@ namespace Service.Services
                 UserId = session.UserId,
                 StartTime = session.StartTime,
                 EndTime = session.EndTime,
+                TargetDuration = session.TargetDuration,
                 Activities = new ActivityBreakdownDto
                 {
                     Regular = progress.Sum(_ => _.Type == WorkItemType.Regular ? _.Progress.Current : 0),
