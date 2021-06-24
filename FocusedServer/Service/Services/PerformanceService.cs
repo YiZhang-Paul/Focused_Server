@@ -14,17 +14,20 @@ namespace Service.Services
         private const double DailyTarget = 8;
         private const double DefaultPeriod = 14;
         private WorkItemRepository WorkItemRepository { get; set; }
+        private UserProfileRepository UserProfileRepository { get; set; }
         private FocusSessionService FocusSessionService { get; set; }
         private BreakSessionService BreakSessionService { get; set; }
 
         public PerformanceService
         (
             WorkItemRepository workItemRepository,
+            UserProfileRepository userProfileRepository,
             FocusSessionService focusSessionService,
             BreakSessionService breakSessionService
         )
         {
             WorkItemRepository = workItemRepository;
+            UserProfileRepository = userProfileRepository;
             FocusSessionService = focusSessionService;
             BreakSessionService = breakSessionService;
         }
@@ -95,8 +98,9 @@ namespace Service.Services
             var endDate = end ?? DateTime.UtcNow;
             var startDate = start ?? endDate.AddDays(-DefaultPeriod);
             var ids = await FocusSessionService.GetSessionWorkItemsByDateRange(userId, startDate, endDate).ConfigureAwait(false);
+            var user = await UserProfileRepository.Get(userId).ConfigureAwait(false);
             var currentProgresses = await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, ids, startDate, endDate).ConfigureAwait(false);
-            var overallProgresses = await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, ids, null, null).ConfigureAwait(false);
+            var overallProgresses = await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, ids, user.TimeInfo.Created, DateTime.UtcNow).ConfigureAwait(false);
             var overallLookup = overallProgresses.ToDictionary(_ => _.Id);
             var breakdown = new EstimationBreakdownDto();
 

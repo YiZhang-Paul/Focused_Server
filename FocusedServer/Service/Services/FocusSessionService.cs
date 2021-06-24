@@ -28,7 +28,8 @@ namespace Service.Services
                 return null;
             }
 
-            var progress = await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, session.WorkItemIds, session.StartTime, session.EndTime).ConfigureAwait(false);
+            var end = session.EndTime ?? DateTime.UtcNow;
+            var progress = await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, session.WorkItemIds, session.StartTime, end).ConfigureAwait(false);
 
             return new FocusSessionDto
             {
