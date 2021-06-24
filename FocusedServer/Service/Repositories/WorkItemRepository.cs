@@ -7,6 +7,7 @@ using Core.Models.TimeSession;
 using Core.Models.WorkItem;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using Service.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace Service.Repositories
             var filter = builder.Eq(_ => _.UserId, userId) & builder.Eq(_ => _.Id, id);
             var aggregate = GetWorkItemWithTimeSeriesAggregate(filter);
 
-            return await aggregate.Project(_ => ToWorkItemDto(_)).FirstOrDefaultAsync().ConfigureAwait(false);
+            return await aggregate.Project(_ => WorkItemUtility.ToWorkItemDto(_)).FirstOrDefaultAsync().ConfigureAwait(false);
         }
 
         public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, List<string> ids)
@@ -33,14 +34,14 @@ namespace Service.Repositories
             var filter = builder.Eq(_ => _.UserId, userId) & builder.In(_ => _.Id, ids);
             var aggregate = GetWorkItemWithTimeSeriesAggregate(filter);
 
-            return await aggregate.Project(_ => ToWorkItemDto(_)).ToListAsync().ConfigureAwait(false);
+            return await aggregate.Project(_ => WorkItemUtility.ToWorkItemDto(_)).ToListAsync().ConfigureAwait(false);
         }
 
         public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, WorkItemQuery query)
         {
             var aggregate = GetWorkItemWithTimeSeriesAggregate(GetFilter(userId, query), query.Skip, query.Limit);
 
-            return await aggregate.Project(_ => ToWorkItemDto(_)).ToListAsync().ConfigureAwait(false);
+            return await aggregate.Project(_ => WorkItemUtility.ToWorkItemDto(_)).ToListAsync().ConfigureAwait(false);
         }
 
         public async Task<bool> UpdateWorkItemsStatus(string userId, WorkItemStatus source, WorkItemStatus target)
@@ -94,7 +95,7 @@ namespace Service.Repositories
                     Type = _.Type,
                     Progress = new ProgressionCounter<double>
                     {
-                        Current = GetTotalTime(_.TimeSeries, start, end),
+                        Current = WorkItemUtility.GetTotalTime(_.TimeSeries, start, end),
                         Target = _.EstimatedHours,
                         IsCompleted = _.Status == WorkItemStatus.Completed
                     }
@@ -151,50 +152,6 @@ namespace Service.Repositories
             var foreignCollection = Connect<TimeSeries>(typeof(TimeSeries).Name);
 
             return aggregate.Lookup(foreignCollection, _ => _.Id, _ => _.DataSourceId, (WorkItemWithTimeSeries _) => _.TimeSeries);
-        }
-
-        private static WorkItemDto ToWorkItemDto(WorkItemWithTimeSeries item)
-        {
-            return new WorkItemDto
-            {
-                Id = item.Id,
-                UserId = item.UserId,
-                Name = item.Name,
-                Type = item.Type,
-                Priority = item.Priority,
-                Status = item.Status,
-                DueDate = item.DueDate,
-                ItemProgress = new ProgressionCounter<double>
-                {
-                    Current = GetTotalTime(item.TimeSeries, item.TimeInfo.Created, DateTime.UtcNow),
-                    Target = item.EstimatedHours,
-                    IsCompleted = item.Status == WorkItemStatus.Completed
-                },
-                SubtaskProgress = new ProgressionCounter<int>
-                {
-                    Current = item.Subtasks.Count(_ => _.Status == WorkItemStatus.Completed),
-                    Target = item.Subtasks.Count,
-                    IsCompleted = item.Subtasks.All(_ => _.Status == WorkItemStatus.Completed)
-                },
-                ChecklistProgress = new ProgressionCounter<int>
-                {
-                    Current = item.Checklist.Count(_ => _.IsCompleted),
-                    Target = item.Checklist.Count,
-                    IsCompleted = item.Checklist.All(_ => _.IsCompleted)
-                }
-            };
-        }
-
-        private static double GetTotalTime(List<TimeSeries> series, DateTime start, DateTime end)
-        {
-            return series.Aggregate(0d, (total, record) =>
-            {
-                record.EndTime ??= DateTime.UtcNow < end ? DateTime.UtcNow : end;
-                var rangeStart = start > record.StartTime ? start : record.StartTime;
-                var rangeEnd = end < record.EndTime ? end : record.EndTime.Value;
-
-                return total + Math.Max(0, (rangeEnd - rangeStart).TotalHours);
-            });
         }
     }
 }
