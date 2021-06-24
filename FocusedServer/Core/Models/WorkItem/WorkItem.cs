@@ -17,7 +17,6 @@ namespace Core.Models.WorkItem
         public WorkItemPriority Priority { get; set; } = WorkItemPriority.NotUrgentNotImportant;
         public WorkItemStatus Status { get; set; } = WorkItemStatus.Idle;
         public double EstimatedHours { get; set; }
-        public TimeSeries TimeSeries { get; set; } = new TimeSeries();
         public DateTime? DueDate { get; set; }
         public bool[] Recur { get; set; } = new bool[7];
         public List<ChecklistEntry> Checklist { get; set; } = new List<ChecklistEntry>();
