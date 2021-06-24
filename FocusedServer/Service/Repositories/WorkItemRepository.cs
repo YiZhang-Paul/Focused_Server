@@ -152,7 +152,9 @@ namespace Service.Repositories
             var aggregate = Collection.Aggregate().Match(filter).Skip(skip);
             aggregate = limit > 0 ? aggregate.Limit(limit) : aggregate;
 
-            return aggregate.Lookup(foreignCollection, _ => _.Id, _ => _.DataSourceId, (WorkItemWithTimeSeries _) => _.TimeSeries);
+            return aggregate
+                .AppendStage<WorkItemWithTimeSeries>("{ $addFields: { WorkItemId: { $toString: '$_id' } } }")
+                .Lookup(foreignCollection, _ => _.WorkItemId, _ => _.DataSourceId, (WorkItemWithTimeSeries _) => _.TimeSeries);
         }
     }
 }
