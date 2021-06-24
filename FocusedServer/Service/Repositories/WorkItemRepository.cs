@@ -148,8 +148,9 @@ namespace Service.Repositories
 
         private IAggregateFluent<WorkItemWithTimeSeries> GetWorkItemWithTimeSeriesAggregate(FilterDefinition<WorkItem> filter, int skip = 0, int limit = 0)
         {
-            var aggregate = Collection.Aggregate().Match(filter).Skip(skip).Limit(limit);
             var foreignCollection = Connect<TimeSeries>(typeof(TimeSeries).Name);
+            var aggregate = Collection.Aggregate().Match(filter).Skip(skip);
+            aggregate = limit > 0 ? aggregate.Limit(limit) : aggregate;
 
             return aggregate.Lookup(foreignCollection, _ => _.Id, _ => _.DataSourceId, (WorkItemWithTimeSeries _) => _.TimeSeries);
         }
