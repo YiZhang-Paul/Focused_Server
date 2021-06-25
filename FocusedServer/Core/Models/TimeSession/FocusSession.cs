@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace Core.Models.TimeSession
 {
@@ -8,6 +7,5 @@ namespace Core.Models.TimeSession
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }
         public double TargetDuration { get; set; }
-        public List<string> WorkItemIds { get; set; } = new List<string>();
     }
 }
