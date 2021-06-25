@@ -15,6 +15,7 @@ namespace Service.Services
         private const double DefaultPeriod = 14;
         private WorkItemRepository WorkItemRepository { get; set; }
         private UserProfileRepository UserProfileRepository { get; set; }
+        private WorkItemService WorkItemService { get; set; }
         private FocusSessionService FocusSessionService { get; set; }
         private BreakSessionService BreakSessionService { get; set; }
 
@@ -22,12 +23,14 @@ namespace Service.Services
         (
             WorkItemRepository workItemRepository,
             UserProfileRepository userProfileRepository,
+            WorkItemService workItemService,
             FocusSessionService focusSessionService,
             BreakSessionService breakSessionService
         )
         {
             WorkItemRepository = workItemRepository;
             UserProfileRepository = userProfileRepository;
+            WorkItemService = workItemService;
             FocusSessionService = focusSessionService;
             BreakSessionService = breakSessionService;
         }
@@ -51,8 +54,8 @@ namespace Service.Services
         {
             var start = new DateTime(year, month, day);
             var end = start.AddDays(1);
-            var activity = await GetActivityBreakdownByDateRange(userId, start, end).ConfigureAwait(false);
-            var activityTime = activity.Regular + activity.Recurring + activity.Interruption + activity.Overlearning;
+            var breakdown = await GetActivityBreakdownByDateRange(userId, start, end).ConfigureAwait(false);
+            var activityTime = breakdown.Regular + breakdown.Recurring + breakdown.Interruption + breakdown.Overlearning;
             var breakTime = await BreakSessionService.GetBreakDurationByDateRange(userId, start, end).ConfigureAwait(false);
 
             return new TimeTrackingBreakdownDto
@@ -81,7 +84,7 @@ namespace Service.Services
         {
             var endDate = end ?? DateTime.UtcNow;
             var startDate = start ?? endDate.AddDays(-DefaultPeriod);
-            var ids = await FocusSessionService.GetSessionWorkItemsByDateRange(userId, startDate, endDate).ConfigureAwait(false);
+            var ids = await WorkItemService.GetTrackedWorkItemIdsByDateRange(userId, startDate, endDate).ConfigureAwait(false);
             var progress = await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, ids, startDate, endDate).ConfigureAwait(false);
 
             return new ActivityBreakdownDto
@@ -97,8 +100,8 @@ namespace Service.Services
         {
             var endDate = end ?? DateTime.UtcNow;
             var startDate = start ?? endDate.AddDays(-DefaultPeriod);
-            var ids = await FocusSessionService.GetSessionWorkItemsByDateRange(userId, startDate, endDate).ConfigureAwait(false);
             var user = await UserProfileRepository.Get(userId).ConfigureAwait(false);
+            var ids = await WorkItemService.GetTrackedWorkItemIdsByDateRange(userId, startDate, endDate).ConfigureAwait(false);
             var currentProgresses = await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, ids, startDate, endDate).ConfigureAwait(false);
             var overallProgresses = await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, ids, user.TimeInfo.Created, DateTime.UtcNow).ConfigureAwait(false);
             var overallLookup = overallProgresses.ToDictionary(_ => _.Id);
