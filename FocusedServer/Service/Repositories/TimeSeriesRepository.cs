@@ -1,7 +1,9 @@
 using Core.Configurations;
+using Core.Enums;
 using Core.Models.TimeSession;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -23,6 +25,24 @@ namespace Service.Repositories
         {
             var builder = Builders<TimeSeries>.Filter;
             var filter = builder.Eq(_ => _.UserId, userId) & builder.In(_ => _.DataSourceId, dataSourceIds);
+
+            return await Collection.Find(filter).ToListAsync().ConfigureAwait(false);
+        }
+
+        public async Task<List<TimeSeries>> GetTimeSeriesByDateRange(string userId, DateTime start, DateTime end, TimeSeriesType? type)
+        {
+            var builder = Builders<TimeSeries>.Filter;
+
+            var filter = builder.And(
+                builder.Eq(_ => _.UserId, userId),
+                builder.Gte(_ => _.StartTime, start),
+                builder.Lte(_ => _.EndTime, end)
+            );
+
+            if (type.HasValue)
+            {
+                filter &= builder.Eq(_ => _.Type, type);
+            }
 
             return await Collection.Find(filter).ToListAsync().ConfigureAwait(false);
         }

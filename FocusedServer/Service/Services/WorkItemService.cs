@@ -1,9 +1,11 @@
 using Core.Dtos;
 using Core.Enums;
+using Core.Models.TimeSession;
 using Core.Models.WorkItem;
 using Service.Repositories;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Service.Services
@@ -11,12 +13,26 @@ namespace Service.Services
     public class WorkItemService
     {
         private WorkItemRepository WorkItemRepository { get; set; }
+        private TimeSeriesRepository TimeSeriesRepository { get; set; }
         private FocusSessionRepository FocusSessionRepository { get; set; }
 
-        public WorkItemService(WorkItemRepository workItemRepository, FocusSessionRepository focusSessionRepository)
+        public WorkItemService
+        (
+            WorkItemRepository workItemRepository,
+            TimeSeriesRepository timeSeriesRepository,
+            FocusSessionRepository focusSessionRepository
+        )
         {
             WorkItemRepository = workItemRepository;
+            TimeSeriesRepository = timeSeriesRepository;
             FocusSessionRepository = focusSessionRepository;
+        }
+
+        public async Task<List<string>> GetTrackedWorkItemIdsByDateRange(string userId, DateTime start, DateTime end)
+        {
+            var series = await TimeSeriesRepository.GetTimeSeriesByDateRange(userId, start, end, TimeSeriesType.WorkItem);
+
+            return series.Select(_ => _.DataSourceId).Distinct().ToList();
         }
 
         public async Task<string> CreateWorkItem(WorkItemDto item)
