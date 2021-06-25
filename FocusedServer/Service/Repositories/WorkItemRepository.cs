@@ -96,7 +96,7 @@ namespace Service.Repositories
                 Type = _.Type,
                 Progress = new ProgressionCounter<double>
                 {
-                    Current = WorkItemUtility.GetTotalTime(_.TimeSeries, start, end),
+                    Current = TimeSeriesUtility.GetTotalTime(_.TimeSeries, start, end),
                     Target = _.EstimatedHours,
                     IsCompleted = _.Status == WorkItemStatus.Completed
                 }
