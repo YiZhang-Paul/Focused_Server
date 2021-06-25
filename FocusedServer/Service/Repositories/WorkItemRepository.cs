@@ -19,6 +19,14 @@ namespace Service.Repositories
     {
         public WorkItemRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(WorkItem).Name) { }
 
+        public async Task<List<WorkItem>> GetWorkItems(string userId, WorkItemStatus status)
+        {
+            var builder = Builders<WorkItem>.Filter;
+            var filter = builder.Eq(_ => _.UserId, userId) & builder.Eq(_ => _.Status, status);
+
+            return await Collection.Find(filter).ToListAsync().ConfigureAwait(false);
+        }
+
         public async Task<WorkItemDto> GetWorkItemMeta(string userId, string id)
         {
             var builder = Builders<WorkItem>.Filter;
@@ -43,16 +51,6 @@ namespace Service.Repositories
             var items = await GetWorkItemWithTimeSeriesAggregate(filter, query.Skip, query.Limit).ToListAsync().ConfigureAwait(false);
 
             return items.Select(WorkItemUtility.ToWorkItemDto).ToList();
-        }
-
-        public async Task<bool> UpdateWorkItemsStatus(string userId, WorkItemStatus source, WorkItemStatus target)
-        {
-            var builder = Builders<WorkItem>.Filter;
-            var filter = builder.Eq(_ => _.UserId, userId) & builder.Eq(_ => _.Status, source);
-            var update = Builders<WorkItem>.Update.Set(_ => _.Status, target);
-            var result = await Collection.UpdateManyAsync(filter, update).ConfigureAwait(false);
-
-            return result.IsAcknowledged;
         }
 
         public async Task<long> GetPastDueWorkItemsCount(string userId, DateTime start, DateTime end)

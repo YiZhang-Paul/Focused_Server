@@ -72,6 +72,16 @@ namespace Service.Services
             return await WorkItemRepository.Delete(userId, id).ConfigureAwait(false);
         }
 
+        public async Task<WorkItemDto> GetWorkItemMeta(string userId, string id)
+        {
+            return await WorkItemRepository.GetWorkItemMeta(userId, id).ConfigureAwait(false);
+        }
+
+        public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, WorkItemQuery query)
+        {
+            return await WorkItemRepository.GetWorkItemMetas(userId, query).ConfigureAwait(false);
+        }
+
         public async Task<WorkItemDto> UpdateWorkItemMeta(WorkItemDto item)
         {
             var workItem = await WorkItemRepository.Get(item.UserId, item.Id).ConfigureAwait(false);
@@ -88,11 +98,6 @@ namespace Service.Services
             workItem.EstimatedHours = item.ItemProgress.Target;
             workItem.TimeInfo.LastModified = DateTime.UtcNow;
 
-            if (item.Status == WorkItemStatus.Ongoing && !await SyncOngoingStatus(item.UserId, item.Id).ConfigureAwait(false))
-            {
-                return null;
-            }
-
             if (await WorkItemRepository.Replace(workItem).ConfigureAwait(false) == null)
             {
                 return null;
@@ -101,35 +106,53 @@ namespace Service.Services
             return await WorkItemRepository.GetWorkItemMeta(item.UserId, item.Id).ConfigureAwait(false);
         }
 
-        public async Task<WorkItemDto> GetWorkItemMeta(string userId, string id)
+        public async Task<bool> StartWorkItem(string userId, WorkItem item)
         {
-            return await WorkItemRepository.GetWorkItemMeta(userId, id).ConfigureAwait(false);
-        }
-
-        public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, WorkItemQuery query)
-        {
-            return await WorkItemRepository.GetWorkItemMetas(userId, query).ConfigureAwait(false);
-        }
-
-        private async Task<bool> SyncOngoingStatus(string userId, string workItemId)
-        {
-            var source = WorkItemStatus.Ongoing;
-            var target = WorkItemStatus.Highlighted;
-            var session = await FocusSessionRepository.GetActiveFocusSession(userId).ConfigureAwait(false);
-
-            if (session == null || !await WorkItemRepository.UpdateWorkItemsStatus(userId, source, target).ConfigureAwait(false))
+            if (await FocusSessionRepository.GetActiveFocusSession(item.UserId).ConfigureAwait(false) == null)
             {
                 return false;
             }
 
-            if (session.WorkItemIds.Contains(workItemId))
+            if (!await StopWorkItem(userId).ConfigureAwait(false))
+            {
+                return false;
+            }
+
+            var series = new TimeSeries
+            {
+                UserId = userId,
+                StartTime = DateTime.UtcNow,
+                Type = TimeSeriesType.WorkItem,
+                DataSourceId = item.Id
+            };
+
+            var seriesId = await TimeSeriesRepository.Add(series).ConfigureAwait(false);
+            item.Status = WorkItemStatus.Ongoing;
+
+            return !string.IsNullOrWhiteSpace(seriesId) && await WorkItemRepository.Replace(item).ConfigureAwait(false) != null;
+        }
+
+        public async Task<bool> StopWorkItem(string userId)
+        {
+            var items = await WorkItemRepository.GetWorkItems(userId, WorkItemStatus.Ongoing).ConfigureAwait(false);
+
+            if (!items.Any())
             {
                 return true;
             }
 
-            session.WorkItemIds.Add(workItemId);
+            var item = items.First();
+            var series = (await TimeSeriesRepository.GetTimeSeriesByDataSource(userId, item.Id).ConfigureAwait(false)).LastOrDefault();
 
-            return await FocusSessionRepository.Replace(session).ConfigureAwait(false) != null;
+            if (series == null || series.EndTime != null)
+            {
+                return false;
+            }
+
+            series.EndTime = DateTime.UtcNow;
+            item.Status = WorkItemStatus.Highlighted;
+
+            return await TimeSeriesRepository.Replace(series).ConfigureAwait(false) != null && await WorkItemRepository.Replace(item).ConfigureAwait(false) != null;
         }
     }
 }
