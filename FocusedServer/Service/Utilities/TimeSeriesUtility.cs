@@ -1,4 +1,4 @@
-using Core.Models.TimeSession;
+using Core.Models.Generic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,15 +7,15 @@ namespace Service.Utilities
 {
     public static class TimeSeriesUtility
     {
-        public static double GetTotalTime(List<TimeSeries> series, DateTime start, DateTime end)
+        public static double GetTotalTime<T>(List<T> series, DateTime start, DateTime end) where T : TimeRange
         {
-            return series.Aggregate(0d, (total, record) =>
+            return series.Sum(_ =>
             {
-                record.EndTime ??= DateTime.UtcNow < end ? DateTime.UtcNow : end;
-                var rangeStart = start > record.StartTime ? start : record.StartTime;
-                var rangeEnd = end < record.EndTime ? end : record.EndTime.Value;
+                _.EndTime ??= DateTime.UtcNow < end ? DateTime.UtcNow : end;
+                var rangeStart = start > _.StartTime ? start : _.StartTime;
+                var rangeEnd = end < _.EndTime ? end : _.EndTime.Value;
 
-                return total + Math.Max(0, (rangeEnd - rangeStart).TotalHours);
+                return Math.Max(0, (rangeEnd - rangeStart).TotalHours);
             });
         }
     }
