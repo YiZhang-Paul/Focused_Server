@@ -32,11 +32,21 @@ namespace Service.Repositories
         public async Task<List<TimeSeries>> GetTimeSeriesByDateRange(string userId, DateTime start, DateTime end, TimeSeriesType? type)
         {
             var builder = Builders<TimeSeries>.Filter;
+            var rangeFilter = builder.Gte(_ => _.StartTime, start) & builder.Lte(_ => _.EndTime, end);
+
+            var startTimeFilter = builder.And(
+                builder.Exists(_ => _.EndTime, false) | builder.Gte(_ => _.EndTime, start),
+                builder.Lte(_ => _.StartTime, start)
+            );
+
+            var endTimeFilter = builder.And(
+                builder.Exists(_ => _.EndTime, false) | builder.Gte(_ => _.EndTime, end),
+                builder.Lte(_ => _.StartTime, end)
+            ); 
 
             var filter = builder.And(
                 builder.Eq(_ => _.UserId, userId),
-                builder.Gte(_ => _.StartTime, start),
-                builder.Lte(_ => _.EndTime, end)
+                builder.Or(rangeFilter, startTimeFilter, endTimeFilter)
             );
 
             if (type.HasValue)
