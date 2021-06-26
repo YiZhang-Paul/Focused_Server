@@ -1,6 +1,6 @@
 using Service.Repositories;
+using Service.Utilities;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Service.Services
@@ -18,12 +18,7 @@ namespace Service.Services
         {
             var sessions = await BreakSessionRepository.GetBreakSessionByDateRange(userId, start, end).ConfigureAwait(false);
 
-            return sessions.Sum(_ =>
-            {
-                var endTime = _.EndTime ?? (DateTime.UtcNow < end ? DateTime.UtcNow : end);
-
-                return (endTime - _.StartTime).TotalHours;
-            });
+            return TimeSeriesUtility.GetTotalTime(sessions, start, end);
         }
     }
 }

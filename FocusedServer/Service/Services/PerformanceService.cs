@@ -1,5 +1,4 @@
 using Core.Dtos;
-using Core.Enums;
 using Core.Models.Generic;
 using Service.Repositories;
 using System;
@@ -14,7 +13,6 @@ namespace Service.Services
         private const double DailyTarget = 8;
         private const double DefaultPeriod = 14;
         private WorkItemRepository WorkItemRepository { get; set; }
-        private UserProfileRepository UserProfileRepository { get; set; }
         private WorkItemService WorkItemService { get; set; }
         private FocusSessionService FocusSessionService { get; set; }
         private BreakSessionService BreakSessionService { get; set; }
@@ -22,14 +20,12 @@ namespace Service.Services
         public PerformanceService
         (
             WorkItemRepository workItemRepository,
-            UserProfileRepository userProfileRepository,
             WorkItemService workItemService,
             FocusSessionService focusSessionService,
             BreakSessionService breakSessionService
         )
         {
             WorkItemRepository = workItemRepository;
-            UserProfileRepository = userProfileRepository;
             WorkItemService = workItemService;
             FocusSessionService = focusSessionService;
             BreakSessionService = breakSessionService;
@@ -84,26 +80,18 @@ namespace Service.Services
         {
             var endDate = end ?? DateTime.UtcNow;
             var startDate = start ?? endDate.AddDays(-DefaultPeriod);
-            var ids = await WorkItemService.GetTrackedWorkItemIdsByDateRange(userId, startDate, endDate).ConfigureAwait(false);
-            var progress = await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, ids, startDate, endDate).ConfigureAwait(false);
+            var progress = await WorkItemService.GetWorkItemActivityBreakdownByDateRange(userId, startDate, endDate).ConfigureAwait(false);
+            progress.Overlearning = await FocusSessionService.GetOverlearningHoursByDateRange(userId, startDate, endDate).ConfigureAwait(false);
 
-            return new ActivityBreakdownDto
-            {
-                Regular = progress.Sum(_ => _.Type == WorkItemType.Regular ? _.Progress.Current : 0),
-                Recurring = progress.Sum(_ => _.Type == WorkItemType.Recurring ? _.Progress.Current : 0),
-                Interruption = progress.Sum(_ => _.Type == WorkItemType.Interruption ? _.Progress.Current : 0),
-                Overlearning = await FocusSessionService.GetOverlearningHoursByDateRange(userId, startDate, endDate).ConfigureAwait(false)
-            };
+            return progress;
         }
 
         public async Task<EstimationBreakdownDto> GetEstimationBreakdownByDateRange(string userId, DateTime? start, DateTime? end)
         {
             var endDate = end ?? DateTime.UtcNow;
             var startDate = start ?? endDate.AddDays(-DefaultPeriod);
-            var user = await UserProfileRepository.Get(userId).ConfigureAwait(false);
-            var ids = await WorkItemService.GetTrackedWorkItemIdsByDateRange(userId, startDate, endDate).ConfigureAwait(false);
-            var currentProgresses = await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, ids, startDate, endDate).ConfigureAwait(false);
-            var overallProgresses = await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, ids, user.TimeInfo.Created, DateTime.UtcNow).ConfigureAwait(false);
+            var currentProgresses = await WorkItemService.GetWorkItemProgressionByDateRange(userId, startDate, endDate).ConfigureAwait(false);
+            var overallProgresses = await WorkItemService.GetWorkItemProgressionByDateRange(userId, new DateTime(1970, 1, 1), DateTime.UtcNow).ConfigureAwait(false);
             var overallLookup = overallProgresses.ToDictionary(_ => _.Id);
             var breakdown = new EstimationBreakdownDto();
 
@@ -114,9 +102,8 @@ namespace Service.Services
 
                 if (overallProgress.Current >= overallProgress.Target)
                 {
-                    var underestimate = Math.Min(currentProgress.Current, overallProgress.Current - overallProgress.Target);
-                    breakdown.Normal += currentProgress.Current - underestimate;
-                    breakdown.Underestimate += underestimate;
+                    breakdown.Normal += overallProgress.Target;
+                    breakdown.Underestimate += overallProgress.Current - overallProgress.Target;
 
                     continue;
                 }

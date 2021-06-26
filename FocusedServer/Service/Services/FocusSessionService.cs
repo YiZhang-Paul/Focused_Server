@@ -3,7 +3,6 @@ using Core.Enums;
 using Service.Repositories;
 using Service.Utilities;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Service.Services
@@ -39,9 +38,9 @@ namespace Service.Services
             }
 
             var end = session.EndTime ?? DateTime.UtcNow;
-            var ids = await WorkItemService.GetTrackedWorkItemIdsByDateRange(userId, session.StartTime, end).ConfigureAwait(false);
-            var progress = await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, ids, session.StartTime, end).ConfigureAwait(false);
-            var series = await TimeSeriesRepository.GetTimeSeriesByDataSource(userId, session.Id).ConfigureAwait(false);
+            var ids = await TimeSeriesRepository.GetDataSourceIdsByDateRange(userId, session.StartTime, end, TimeSeriesType.WorkItem).ConfigureAwait(false);
+            var progress = await WorkItemService.GetWorkItemActivityBreakdownByDateRange(userId, session.StartTime, end).ConfigureAwait(false);
+            progress.Overlearning = await GetOverlearningHoursByDateRange(userId, session.StartTime, end).ConfigureAwait(false);
 
             return new FocusSessionDto
             {
@@ -50,22 +49,14 @@ namespace Service.Services
                 StartTime = session.StartTime,
                 EndTime = session.EndTime,
                 TargetDuration = session.TargetDuration,
-                Activities = new ActivityBreakdownDto
-                {
-                    Regular = progress.Sum(_ => _.Type == WorkItemType.Regular ? _.Progress.Current : 0),
-                    Recurring = progress.Sum(_ => _.Type == WorkItemType.Recurring ? _.Progress.Current : 0),
-                    Interruption = progress.Sum(_ => _.Type == WorkItemType.Interruption ? _.Progress.Current : 0),
-                    Overlearning = TimeSeriesUtility.GetTotalTime(series, session.StartTime, end)
-                },
+                Activities = progress,
                 WorkItems = await WorkItemRepository.GetWorkItemMetas(userId, ids).ConfigureAwait(false)
             };
         }
 
         public async Task<double> GetOverlearningHoursByDateRange(string userId, DateTime start, DateTime end)
         {
-            var sessions = await FocusSessionRepository.GetFocusSessionsByDateRange(userId, start, end).ConfigureAwait(false);
-            var ids = sessions.Select(_ => _.Id).ToList();
-            var series = await TimeSeriesRepository.GetTimeSeriesByDataSources(userId, ids).ConfigureAwait(false);
+            var series = await TimeSeriesRepository.GetTimeSeriesByDateRange(userId, start, end, TimeSeriesType.Session);
 
             return TimeSeriesUtility.GetTotalTime(series, start, end);
         }
