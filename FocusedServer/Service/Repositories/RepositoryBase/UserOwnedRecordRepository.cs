@@ -5,7 +5,7 @@ using MongoDB.Driver;
 using System;
 using System.Threading.Tasks;
 
-namespace Service.Repositories
+namespace Service.Repositories.RepositoryBase
 {
     public class UserOwnedRecordRepository<T> : DatabaseConnector<T> where T : UserOwnedRecord
     {

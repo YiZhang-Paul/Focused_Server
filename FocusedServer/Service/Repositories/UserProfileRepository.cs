@@ -1,6 +1,7 @@
 using Core.Configurations;
 using Core.Models.User;
 using Microsoft.Extensions.Options;
+using Service.Repositories.RepositoryBase;
 
 namespace Service.Repositories
 {

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using System.Threading.Tasks;
 
-namespace Service.Repositories
+namespace Service.Repositories.RepositoryBase
 {
     public class GenericRecordRepository<T> : DatabaseConnector<T> where T : DatabaseEntry
     {

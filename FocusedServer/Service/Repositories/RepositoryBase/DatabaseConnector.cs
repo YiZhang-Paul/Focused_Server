@@ -3,7 +3,7 @@ using Core.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
-namespace Service.Repositories
+namespace Service.Repositories.RepositoryBase
 {
     public class DatabaseConnector<T> where T : DatabaseEntry
     {

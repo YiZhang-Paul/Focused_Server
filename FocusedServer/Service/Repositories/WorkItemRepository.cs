@@ -7,6 +7,7 @@ using Core.Models.TimeSession;
 using Core.Models.WorkItem;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using Service.Repositories.RepositoryBase;
 using Service.Utilities;
 using System;
 using System.Collections.Generic;

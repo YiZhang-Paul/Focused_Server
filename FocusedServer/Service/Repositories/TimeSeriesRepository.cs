@@ -3,6 +3,7 @@ using Core.Enums;
 using Core.Models.TimeSession;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using Service.Repositories.RepositoryBase;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Service.Repositories
 {
-    public class TimeSeriesRepository : UserOwnedRecordRepository<TimeSeries>
+    public class TimeSeriesRepository : TimeRangeRecordRepository<TimeSeries>
     {
         public TimeSeriesRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(TimeSeries).Name) { }
 
@@ -31,27 +32,11 @@ namespace Service.Repositories
 
         public async Task<List<TimeSeries>> GetTimeSeriesByDateRange(string userId, DateTime start, DateTime end, TimeSeriesType? type)
         {
-            var builder = Builders<TimeSeries>.Filter;
-            var rangeFilter = builder.Gte(_ => _.StartTime, start) & builder.Lte(_ => _.EndTime, end);
-
-            var startTimeFilter = builder.And(
-                builder.Exists(_ => _.EndTime, false) | builder.Gte(_ => _.EndTime, start),
-                builder.Lte(_ => _.StartTime, start)
-            );
-
-            var endTimeFilter = builder.And(
-                builder.Exists(_ => _.EndTime, false) | builder.Gte(_ => _.EndTime, end),
-                builder.Lte(_ => _.StartTime, end)
-            ); 
-
-            var filter = builder.And(
-                builder.Eq(_ => _.UserId, userId),
-                builder.Or(rangeFilter, startTimeFilter, endTimeFilter)
-            );
+            var filter = GetOverlappingTimeRangeFilter(userId, start, end);
 
             if (type.HasValue)
             {
-                filter &= builder.Eq(_ => _.Type, type);
+                filter &= Builders<TimeSeries>.Filter.Eq(_ => _.Type, type);
             }
 
             return await Collection.Find(filter).ToListAsync().ConfigureAwait(false);
