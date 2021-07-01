@@ -1,6 +1,7 @@
 using Core.Configurations;
 using Core.Dtos;
 using Core.Enums;
+using Core.Interfaces.Repositories;
 using Core.Models.Aggregates;
 using Core.Models.Generic;
 using Core.Models.TimeSession;
@@ -16,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace Service.Repositories
 {
-    public class WorkItemRepository : UserOwnedRecordRepository<WorkItem>
+    public class WorkItemRepository : UserOwnedRecordRepository<WorkItem>, IWorkItemRepository
     {
         public WorkItemRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(WorkItem).Name) { }
 

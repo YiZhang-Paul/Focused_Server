@@ -1,8 +1,9 @@
 using Core.Dtos;
 using Core.Enums;
+using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
 using Core.Models.TimeSession;
 using Core.Models.WorkItem;
-using Service.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,17 +11,17 @@ using System.Threading.Tasks;
 
 namespace Service.Services
 {
-    public class WorkItemService
+    public class WorkItemService : IWorkItemService
     {
-        private WorkItemRepository WorkItemRepository { get; set; }
-        private TimeSeriesRepository TimeSeriesRepository { get; set; }
-        private FocusSessionRepository FocusSessionRepository { get; set; }
+        private IWorkItemRepository WorkItemRepository { get; set; }
+        private ITimeSeriesRepository TimeSeriesRepository { get; set; }
+        private IFocusSessionRepository FocusSessionRepository { get; set; }
 
         public WorkItemService
         (
-            WorkItemRepository workItemRepository,
-            TimeSeriesRepository timeSeriesRepository,
-            FocusSessionRepository focusSessionRepository
+            IWorkItemRepository workItemRepository,
+            ITimeSeriesRepository timeSeriesRepository,
+            IFocusSessionRepository focusSessionRepository
         )
         {
             WorkItemRepository = workItemRepository;

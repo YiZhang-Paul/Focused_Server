@@ -1,6 +1,7 @@
 using Core.Dtos;
 using Core.Enums;
-using Service.Repositories;
+using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
 using Service.Utilities;
 using System;
 using System.Threading.Tasks;
@@ -9,17 +10,17 @@ namespace Service.Services
 {
     public class FocusSessionService
     {
-        private WorkItemRepository WorkItemRepository { get; set; }
-        private TimeSeriesRepository TimeSeriesRepository { get; set; }
-        private FocusSessionRepository FocusSessionRepository { get; set; }
-        private WorkItemService WorkItemService { get; set; }
+        private IWorkItemRepository WorkItemRepository { get; set; }
+        private ITimeSeriesRepository TimeSeriesRepository { get; set; }
+        private IFocusSessionRepository FocusSessionRepository { get; set; }
+        private IWorkItemService WorkItemService { get; set; }
 
         public FocusSessionService
         (
-            WorkItemRepository workItemRepository,
-            TimeSeriesRepository timeSeriesRepository,
-            FocusSessionRepository focusSessionRepository,
-            WorkItemService workItemService
+            IWorkItemRepository workItemRepository,
+            ITimeSeriesRepository timeSeriesRepository,
+            IFocusSessionRepository focusSessionRepository,
+            IWorkItemService workItemService
         )
         {
             WorkItemRepository = workItemRepository;

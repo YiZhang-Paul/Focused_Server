@@ -1,6 +1,7 @@
 using Core.Dtos;
+using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
 using Core.Models.Generic;
-using Service.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,15 +13,15 @@ namespace Service.Services
     {
         private const double DailyTarget = 8;
         private const double DefaultPeriod = 14;
-        private WorkItemRepository WorkItemRepository { get; set; }
-        private WorkItemService WorkItemService { get; set; }
+        private IWorkItemRepository WorkItemRepository { get; set; }
+        private IWorkItemService WorkItemService { get; set; }
         private FocusSessionService FocusSessionService { get; set; }
         private BreakSessionService BreakSessionService { get; set; }
 
         public PerformanceService
         (
-            WorkItemRepository workItemRepository,
-            WorkItemService workItemService,
+            IWorkItemRepository workItemRepository,
+            IWorkItemService workItemService,
             FocusSessionService focusSessionService,
             BreakSessionService breakSessionService
         )

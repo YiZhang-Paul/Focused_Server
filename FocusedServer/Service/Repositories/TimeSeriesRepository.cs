@@ -1,5 +1,6 @@
 using Core.Configurations;
 using Core.Enums;
+using Core.Interfaces.Repositories;
 using Core.Models.TimeSession;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Service.Repositories
 {
-    public class TimeSeriesRepository : TimeRangeRecordRepository<TimeSeries>
+    public class TimeSeriesRepository : TimeRangeRecordRepository<TimeSeries>, ITimeSeriesRepository
     {
         public TimeSeriesRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(TimeSeries).Name) { }
 
