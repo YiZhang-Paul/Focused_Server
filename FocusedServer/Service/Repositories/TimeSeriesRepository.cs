@@ -16,7 +16,7 @@ namespace Service.Repositories
     {
         public TimeSeriesRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(TimeSeries).Name) { }
 
-        public async Task<List<string>> GetDataSourceIdsByDateRange(string userId, DateTime start, DateTime end, TimeSeriesType? type)
+        public async Task<List<string>> GetDataSourceIdsByDateRange(string userId, DateTime start, DateTime end, TimeSeriesType type = TimeSeriesType.All)
         {
             var series = await GetTimeSeriesByDateRange(userId, start, end, type).ConfigureAwait(false);
 
@@ -31,11 +31,11 @@ namespace Service.Repositories
             return await Collection.Find(filter).ToListAsync().ConfigureAwait(false);
         }
 
-        public async Task<List<TimeSeries>> GetTimeSeriesByDateRange(string userId, DateTime start, DateTime end, TimeSeriesType? type)
+        public async Task<List<TimeSeries>> GetTimeSeriesByDateRange(string userId, DateTime start, DateTime end, TimeSeriesType type = TimeSeriesType.All)
         {
             var filter = GetOverlappingTimeRangeFilter(userId, start, end);
 
-            if (type.HasValue)
+            if (type != TimeSeriesType.All)
             {
                 filter &= Builders<TimeSeries>.Filter.Eq(_ => _.Type, type);
             }
