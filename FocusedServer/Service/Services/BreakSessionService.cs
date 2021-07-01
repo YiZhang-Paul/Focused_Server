@@ -1,4 +1,4 @@
-using Service.Repositories;
+using Core.Interfaces.Repositories;
 using Service.Utilities;
 using System;
 using System.Threading.Tasks;
@@ -7,9 +7,9 @@ namespace Service.Services
 {
     public class BreakSessionService
     {
-        private BreakSessionRepository BreakSessionRepository { get; set; }
+        private IBreakSessionRepository BreakSessionRepository { get; set; }
 
-        public BreakSessionService(BreakSessionRepository breakSessionRepository)
+        public BreakSessionService(IBreakSessionRepository breakSessionRepository)
         {
             BreakSessionRepository = breakSessionRepository;
         }

@@ -1,4 +1,5 @@
 using Core.Configurations;
+using Core.Interfaces.Repositories.RepositoryBase;
 using Core.Models.Generic;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Service.Repositories.RepositoryBase
 {
-    public class TimeRangeRecordRepository<T> : UserOwnedRecordRepository<T> where T : TimeRange
+    public class TimeRangeRecordRepository<T> : UserOwnedRecordRepository<T>, ITimeRangeRecordRepository<T> where T : TimeRange
     {
         public TimeRangeRecordRepository(IOptions<DatabaseConfiguration> configuration, string collection) : base(configuration, collection) { }
 

@@ -1,4 +1,5 @@
 using Core.Configurations;
+using Core.Interfaces.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
@@ -33,7 +34,7 @@ namespace WebApi
             services.AddScoped<WorkItemRepository, WorkItemRepository>();
             services.AddScoped<TimeSeriesRepository, TimeSeriesRepository>();
             services.AddScoped<FocusSessionRepository, FocusSessionRepository>();
-            services.AddScoped<BreakSessionRepository, BreakSessionRepository>();
+            services.AddScoped<IBreakSessionRepository, BreakSessionRepository>();
             services.AddScoped<UserProfileRepository, UserProfileRepository>();
             services.AddScoped<WorkItemService, WorkItemService>();
             services.AddScoped<FocusSessionService, FocusSessionService>();

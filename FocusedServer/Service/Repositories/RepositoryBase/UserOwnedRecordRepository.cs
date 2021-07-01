@@ -1,4 +1,5 @@
 using Core.Configurations;
+using Core.Interfaces.Repositories.RepositoryBase;
 using Core.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Service.Repositories.RepositoryBase
 {
-    public class UserOwnedRecordRepository<T> : DatabaseConnector<T> where T : UserOwnedRecord
+    public class UserOwnedRecordRepository<T> : DatabaseConnector<T>, IUserOwnedRecordRepository<T> where T : UserOwnedRecord
     {
         public UserOwnedRecordRepository(IOptions<DatabaseConfiguration> configuration, string collection) : base(configuration, collection) { }
 

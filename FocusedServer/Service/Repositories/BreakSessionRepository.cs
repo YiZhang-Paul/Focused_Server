@@ -1,4 +1,5 @@
 using Core.Configurations;
+using Core.Interfaces.Repositories;
 using Core.Models.TimeSession;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Service.Repositories
 {
-    public class BreakSessionRepository : TimeRangeRecordRepository<BreakSession>
+    public class BreakSessionRepository : TimeRangeRecordRepository<BreakSession>, IBreakSessionRepository
     {
         public BreakSessionRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(BreakSession).Name) { }
 
