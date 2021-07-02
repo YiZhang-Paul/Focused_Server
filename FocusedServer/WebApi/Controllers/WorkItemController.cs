@@ -1,7 +1,7 @@
 using Core.Dtos;
+using Core.Interfaces.Services;
 using Core.Models.WorkItem;
 using Microsoft.AspNetCore.Mvc;
-using Service.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -12,9 +12,9 @@ namespace WebApi.Controllers
     public class WorkItemController : ControllerBase
     {
         private const string UserId = "60cd1862629e063c384f3ea1";
-        private WorkItemService WorkItemService { get; set; }
+        private IWorkItemService WorkItemService { get; set; }
 
-        public WorkItemController(WorkItemService workItemService)
+        public WorkItemController(IWorkItemService workItemService)
         {
             WorkItemService = workItemService;
         }

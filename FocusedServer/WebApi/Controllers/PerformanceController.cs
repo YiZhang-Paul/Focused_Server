@@ -1,7 +1,7 @@
 using Core.Dtos;
+using Core.Interfaces.Services;
 using Core.Models.Generic;
 using Microsoft.AspNetCore.Mvc;
-using Service.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,9 +13,9 @@ namespace WebApi.Controllers
     public class PerformanceController : ControllerBase
     {
         private const string UserId = "60cd1862629e063c384f3ea1";
-        private PerformanceService PerformanceService { get; set; }
+        private IPerformanceService PerformanceService { get; set; }
 
-        public PerformanceController(PerformanceService performanceService)
+        public PerformanceController(IPerformanceService performanceService)
         {
             PerformanceService = performanceService;
         }

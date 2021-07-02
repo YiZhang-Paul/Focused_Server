@@ -1,8 +1,8 @@
 using Core.Dtos;
+using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
 using Core.Models.TimeSession;
 using Microsoft.AspNetCore.Mvc;
-using Service.Repositories;
-using Service.Services;
 using System.Threading.Tasks;
 
 namespace WebApi.Controllers
@@ -12,10 +12,10 @@ namespace WebApi.Controllers
     public class TimeSessionController : ControllerBase
     {
         private const string UserId = "60cd1862629e063c384f3ea1";
-        private BreakSessionRepository BreakSessionRepository { get; set; }
-        private FocusSessionService FocusSessionService { get; set; }
+        private IBreakSessionRepository BreakSessionRepository { get; set; }
+        private IFocusSessionService FocusSessionService { get; set; }
 
-        public TimeSessionController(BreakSessionRepository breakSessionRepository, FocusSessionService focusSessionService)
+        public TimeSessionController(IBreakSessionRepository breakSessionRepository, IFocusSessionService focusSessionService)
         {
             BreakSessionRepository = breakSessionRepository;
             FocusSessionService = focusSessionService;

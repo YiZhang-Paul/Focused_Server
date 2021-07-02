@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Service.Services
 {
-    public class PerformanceService
+    public class PerformanceService : IPerformanceService
     {
         private const double DailyTarget = 8;
         private const double DefaultPeriod = 14;

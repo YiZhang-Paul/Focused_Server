@@ -36,11 +36,11 @@ namespace WebApi
             services.AddScoped<ITimeSeriesRepository, TimeSeriesRepository>();
             services.AddScoped<IFocusSessionRepository, FocusSessionRepository>();
             services.AddScoped<IBreakSessionRepository, BreakSessionRepository>();
-            services.AddScoped<UserProfileRepository, UserProfileRepository>();
+            services.AddScoped<IUserProfileRepository, UserProfileRepository>();
             services.AddScoped<IWorkItemService, WorkItemService>();
             services.AddScoped<IFocusSessionService, FocusSessionService>();
             services.AddScoped<IBreakSessionService, BreakSessionService>();
-            services.AddScoped<PerformanceService, PerformanceService>();
+            services.AddScoped<IPerformanceService, PerformanceService>();
             services.Configure<DatabaseConfiguration>(Configuration.GetSection(DatabaseConfiguration.Key));
         }
 

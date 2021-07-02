@@ -1,6 +1,6 @@
+using Core.Interfaces.Repositories;
 using Core.Models.User;
 using Microsoft.AspNetCore.Mvc;
-using Service.Repositories;
 using System.Threading.Tasks;
 
 namespace WebApi.Controllers
@@ -9,9 +9,9 @@ namespace WebApi.Controllers
     [ApiController]
     public class UserProfileController : ControllerBase
     {
-        private UserProfileRepository UserProfileRepository { get; set; }
+        private IUserProfileRepository UserProfileRepository { get; set; }
 
-        public UserProfileController(UserProfileRepository userProfileRepository)
+        public UserProfileController(IUserProfileRepository userProfileRepository)
         {
             UserProfileRepository = userProfileRepository;
         }
