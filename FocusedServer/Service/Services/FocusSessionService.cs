@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Service.Services
 {
-    public class FocusSessionService
+    public class FocusSessionService : IFocusSessionService
     {
         private IWorkItemRepository WorkItemRepository { get; set; }
         private ITimeSeriesRepository TimeSeriesRepository { get; set; }

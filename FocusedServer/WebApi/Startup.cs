@@ -38,8 +38,8 @@ namespace WebApi
             services.AddScoped<IBreakSessionRepository, BreakSessionRepository>();
             services.AddScoped<UserProfileRepository, UserProfileRepository>();
             services.AddScoped<IWorkItemService, WorkItemService>();
-            services.AddScoped<FocusSessionService, FocusSessionService>();
-            services.AddScoped<BreakSessionService, BreakSessionService>();
+            services.AddScoped<IFocusSessionService, FocusSessionService>();
+            services.AddScoped<IBreakSessionService, BreakSessionService>();
             services.AddScoped<PerformanceService, PerformanceService>();
             services.Configure<DatabaseConfiguration>(Configuration.GetSection(DatabaseConfiguration.Key));
         }

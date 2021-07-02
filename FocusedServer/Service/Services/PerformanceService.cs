@@ -15,15 +15,15 @@ namespace Service.Services
         private const double DefaultPeriod = 14;
         private IWorkItemRepository WorkItemRepository { get; set; }
         private IWorkItemService WorkItemService { get; set; }
-        private FocusSessionService FocusSessionService { get; set; }
-        private BreakSessionService BreakSessionService { get; set; }
+        private IFocusSessionService FocusSessionService { get; set; }
+        private IBreakSessionService BreakSessionService { get; set; }
 
         public PerformanceService
         (
             IWorkItemRepository workItemRepository,
             IWorkItemService workItemService,
-            FocusSessionService focusSessionService,
-            BreakSessionService breakSessionService
+            IFocusSessionService focusSessionService,
+            IBreakSessionService breakSessionService
         )
         {
             WorkItemRepository = workItemRepository;
@@ -92,7 +92,7 @@ namespace Service.Services
             var endDate = end ?? DateTime.UtcNow;
             var startDate = start ?? endDate.AddDays(-DefaultPeriod);
             var currentProgresses = await WorkItemService.GetWorkItemProgressionByDateRange(userId, startDate, endDate).ConfigureAwait(false);
-            var overallProgresses = await WorkItemService.GetWorkItemProgressionByDateRange(userId, new DateTime(1970, 1, 1), DateTime.UtcNow).ConfigureAwait(false);
+            var overallProgresses = await WorkItemService.GetWorkItemProgressionByDateRange(userId, new DateTime(1970, 1, 1), endDate).ConfigureAwait(false);
             var overallLookup = overallProgresses.ToDictionary(_ => _.Id);
             var breakdown = new EstimationBreakdownDto();
 
@@ -103,8 +103,9 @@ namespace Service.Services
 
                 if (overallProgress.Current >= overallProgress.Target)
                 {
-                    breakdown.Normal += overallProgress.Target;
-                    breakdown.Underestimate += overallProgress.Current - overallProgress.Target;
+                    var underestimate = Math.Min(currentProgress.Current, overallProgress.Current - overallProgress.Target);
+                    breakdown.Normal += currentProgress.Current - underestimate;
+                    breakdown.Underestimate += underestimate;
 
                     continue;
                 }
