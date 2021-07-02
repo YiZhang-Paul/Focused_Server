@@ -11,6 +11,7 @@ using Microsoft.Extensions.Hosting;
 using Service.Repositories;
 using Service.Services;
 using System.Text.Json;
+using WebApi.AppStart;
 
 namespace WebApi
 {
@@ -42,6 +43,7 @@ namespace WebApi
             services.AddScoped<IBreakSessionService, BreakSessionService>();
             services.AddScoped<IPerformanceService, PerformanceService>();
             services.Configure<DatabaseConfiguration>(Configuration.GetSection(DatabaseConfiguration.Key));
+            CustomBsonSerializers.Register();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
