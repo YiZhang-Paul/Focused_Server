@@ -4,6 +4,8 @@ using Core.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Service.Repositories.RepositoryBase
@@ -30,6 +32,18 @@ namespace Service.Repositories.RepositoryBase
             await Collection.InsertOneAsync(document).ConfigureAwait(false);
 
             return document.Id;
+        }
+
+        public async Task<List<string>> Add(List<T> documents)
+        {
+            if (documents.Any(_ => string.IsNullOrWhiteSpace(_.UserId)))
+            {
+                throw new ArgumentNullException("Must have a valid user Id.");
+            }
+
+            await Collection.InsertManyAsync(documents).ConfigureAwait(false);
+
+            return documents.Select(_ => _.Id).ToList();
         }
 
         public async Task<T> Replace(T document)
