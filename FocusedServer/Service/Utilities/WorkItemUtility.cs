@@ -22,7 +22,7 @@ namespace Service.Utilities
                 DueDate = item.DueDate,
                 ItemProgress = new ProgressionCounter<double>
                 {
-                    Current = TimeSeriesUtility.GetTotalTime(item.TimeSeries, item.TimeInfo.Created, DateTime.UtcNow),
+                    Current = TimeSeriesUtility.GetTotalTime(item.TimeSeries, item.TimeInfo.Created, DateTime.Now),
                     Target = item.EstimatedHours,
                     IsCompleted = item.Status == WorkItemStatus.Completed
                 },

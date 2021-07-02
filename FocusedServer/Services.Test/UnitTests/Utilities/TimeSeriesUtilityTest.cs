@@ -43,7 +43,7 @@ namespace Services.Test.UnitTests.Utilities
         [Test]
         public void GetTotalTimeShouldReturnZeroWhenTimeSeriesIsEmpty()
         {
-            Assert.AreEqual(0, TimeSeriesUtility.GetTotalTime(new List<TimeSeries>(), new DateTime(2020, 1, 1), DateTime.UtcNow));
+            Assert.AreEqual(0, TimeSeriesUtility.GetTotalTime(new List<TimeSeries>(), new DateTime(2020, 1, 1), DateTime.Now));
         }
 
         [Test]
@@ -68,8 +68,8 @@ namespace Services.Test.UnitTests.Utilities
         public void GetTotalTimeShouldIncludeOpenTimeRange()
         {
             _series.Last().EndTime = null;
-            var start = DateTime.UtcNow.AddHours(-3);
-            var end = DateTime.UtcNow;
+            var start = DateTime.Now.AddHours(-3);
+            var end = DateTime.Now;
 
             Assert.AreEqual(3, Math.Round(TimeSeriesUtility.GetTotalTime(_series, start, end), 2));
         }

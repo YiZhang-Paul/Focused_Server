@@ -11,7 +11,7 @@ namespace Service.Utilities
         {
             return series.Sum(_ =>
             {
-                _.EndTime ??= DateTime.UtcNow < end ? DateTime.UtcNow : end;
+                _.EndTime ??= DateTime.Now < end ? DateTime.Now : end;
                 var rangeStart = start > _.StartTime ? start : _.StartTime;
                 var rangeEnd = end < _.EndTime ? end : _.EndTime.Value;
 

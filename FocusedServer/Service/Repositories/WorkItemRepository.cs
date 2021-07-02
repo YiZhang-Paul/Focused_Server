@@ -35,7 +35,7 @@ namespace Service.Repositories
             var filter = builder.Eq(_ => _.UserId, userId) & builder.Eq(_ => _.Id, id);
             var item = await GetWorkItemWithTimeSeriesAggregate(filter).FirstOrDefaultAsync().ConfigureAwait(false);
 
-            return WorkItemUtility.ToWorkItemDto(item);
+            return item == null ? null : WorkItemUtility.ToWorkItemDto(item);
         }
 
         public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, List<string> ids)
@@ -63,7 +63,7 @@ namespace Service.Repositories
                 builder.Eq(_ => _.UserId, userId),
                 builder.Gte(_ => _.DueDate, start),
                 builder.Lte(_ => _.DueDate, end),
-                builder.Lte(_ => _.DueDate, DateTime.UtcNow)
+                builder.Lte(_ => _.DueDate, DateTime.Now)
             );
 
             return await Collection.CountDocumentsAsync(filter).ConfigureAwait(false);
@@ -77,7 +77,7 @@ namespace Service.Repositories
                 builder.Eq(_ => _.UserId, userId),
                 builder.Gte(_ => _.DueDate, start),
                 builder.Lte(_ => _.DueDate, end),
-                builder.Gt(_ => _.DueDate, DateTime.UtcNow)
+                builder.Gt(_ => _.DueDate, DateTime.Now)
             );
 
             return await Collection.CountDocumentsAsync(filter).ConfigureAwait(false);

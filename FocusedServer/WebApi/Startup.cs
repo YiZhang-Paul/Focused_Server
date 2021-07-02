@@ -10,11 +10,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Service.Repositories;
 using Service.Services;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using WebApi.AppStart;
 
 namespace WebApi
 {
+    [ExcludeFromCodeCoverage]
     public class Startup
     {
         public Startup(IConfiguration configuration)

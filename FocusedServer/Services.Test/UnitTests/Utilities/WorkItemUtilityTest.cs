@@ -36,9 +36,9 @@ namespace Services.Test.UnitTests.Utilities
                 },
                 Checklist = new List<ChecklistEntry>
                 {
-                    new ChecklistEntry { IsCompleted = true },
-                    new ChecklistEntry { IsCompleted = false },
-                    new ChecklistEntry { IsCompleted = true }
+                    new ChecklistEntry { Description = "description_1", IsCompleted = true },
+                    new ChecklistEntry { Description = "description_2", IsCompleted = false },
+                    new ChecklistEntry { Description = "description_3", IsCompleted = true }
                 }
             };
 
