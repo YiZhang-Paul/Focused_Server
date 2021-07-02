@@ -1,4 +1,5 @@
 using Core.Models.TimeSession;
+using MongoDB.Bson;
 using NUnit.Framework;
 using Service.Repositories;
 using System;
@@ -50,21 +51,22 @@ namespace Services.Test.IntegrationTests.Repositories
         {
             var sessions = new List<BreakSession>
             {
-                new BreakSession { UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), TargetDuration = 2.5 }
+                new BreakSession { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), TargetDuration = 2.5 }
             };
 
             await _repository.Add(sessions).ConfigureAwait(false);
 
             var result = await _repository.GetActiveBreakSession("user_id").ConfigureAwait(false);
 
-            Assert.AreEqual(2.5, result.TargetDuration);
-            Assert.IsTrue(Math.Abs((sessions[0].StartTime - result.StartTime).TotalMinutes) < 1);
-            Assert.IsNull(result.EndTime);
+            Assert.AreEqual(sessions[0].Id, result.Id);
         }
 
         [Test]
         public async Task GetBreakSessionByDateRangeShouldReturnEmptyCollectionWhenNoBreakSessionFound()
         {
+            var start = new DateTime(2021, 1, 2);
+            var end = new DateTime(2021, 1, 5);
+
             var sessions = new List<BreakSession>
             {
                 new BreakSession { UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 15, 10, 0), EndTime = new DateTime(2021, 1, 1, 15, 30, 0) },
@@ -74,7 +76,7 @@ namespace Services.Test.IntegrationTests.Repositories
 
             await _repository.Add(sessions).ConfigureAwait(false);
 
-            var result = await _repository.GetBreakSessionByDateRange("user_id", new DateTime(2021, 1, 2), new DateTime(2021, 1, 5)).ConfigureAwait(false);
+            var result = await _repository.GetBreakSessionByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.IsFalse(result.Any());
         }
@@ -82,45 +84,71 @@ namespace Services.Test.IntegrationTests.Repositories
         [Test]
         public async Task GetBreakSessionByDateRangeShouldReturnBreakSessionsWithinTimeRange()
         {
+            var start = new DateTime(2021, 1, 1, 15, 30, 1);
+            var end = new DateTime(2021, 1, 1, 15, 54, 59);
+
             var sessions = new List<BreakSession>
             {
-                new BreakSession { UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 15, 10, 0), EndTime = new DateTime(2021, 1, 1, 15, 30, 0) },
-                new BreakSession { UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 15, 35, 0), EndTime = new DateTime(2021, 1, 1, 15, 50, 0) },
-                new BreakSession { UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 15, 55, 0), EndTime = new DateTime(2021, 1, 1, 16, 15, 0) }
+                new BreakSession
+                {
+                    Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 15, 10, 0), EndTime = new DateTime(2021, 1, 1, 15, 30, 0)
+                },
+                new BreakSession
+                {
+                    Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 15, 35, 0), EndTime = new DateTime(2021, 1, 1, 15, 50, 0)
+                },
+                new BreakSession
+                {
+                    Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 15, 55, 0), EndTime = new DateTime(2021, 1, 1, 16, 15, 0)
+                }
             };
 
             await _repository.Add(sessions).ConfigureAwait(false);
 
-            var result = await _repository.GetBreakSessionByDateRange("user_id", new DateTime(2021, 1, 1, 15, 30, 1), new DateTime(2021, 1, 1, 15, 54, 59)).ConfigureAwait(false);
+            var result = await _repository.GetBreakSessionByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.AreEqual(1, result.Count);
-            Assert.AreEqual(sessions[1].StartTime, result[0].StartTime);
-            Assert.AreEqual(sessions[1].EndTime, result[0].EndTime);
+            Assert.AreEqual(sessions[1].Id, result[0].Id);
         }
 
         [Test]
         public async Task GetBreakSessionByDateRangeShouldReturnOverlappingBreakSessions()
         {
+            var start = new DateTime(2021, 1, 1, 15, 20, 0);
+            var end = new DateTime(2021, 1, 1, 16, 05, 0);
+
             var sessions = new List<BreakSession>
             {
-                new BreakSession { UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 14, 45, 0), EndTime = new DateTime(2021, 1, 1, 15, 05, 0) },
-                new BreakSession { UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 15, 10, 0), EndTime = new DateTime(2021, 1, 1, 15, 30, 0) },
-                new BreakSession { UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 15, 35, 0), EndTime = new DateTime(2021, 1, 1, 15, 50, 0) },
-                new BreakSession { UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 15, 55, 0), EndTime = new DateTime(2021, 1, 1, 16, 15, 0) },
-                new BreakSession { UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 16, 20, 0), EndTime = new DateTime(2021, 1, 1, 16, 40, 0) }
+                new BreakSession
+                {
+                    Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 14, 45, 0), EndTime = new DateTime(2021, 1, 1, 15, 05, 0)
+                },
+                new BreakSession
+                {
+                    Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 15, 10, 0), EndTime = new DateTime(2021, 1, 1, 15, 30, 0)
+                },
+                new BreakSession
+                {
+                    Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 15, 35, 0), EndTime = new DateTime(2021, 1, 1, 15, 50, 0)
+                },
+                new BreakSession
+                {
+                    Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 15, 55, 0), EndTime = new DateTime(2021, 1, 1, 16, 15, 0)
+                },
+                new BreakSession
+                {
+                    Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 16, 20, 0), EndTime = new DateTime(2021, 1, 1, 16, 40, 0)
+                }
             };
 
             await _repository.Add(sessions).ConfigureAwait(false);
 
-            var result = await _repository.GetBreakSessionByDateRange("user_id", new DateTime(2021, 1, 1, 15, 20, 0), new DateTime(2021, 1, 1, 16, 05, 0)).ConfigureAwait(false);
+            var result = await _repository.GetBreakSessionByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.AreEqual(3, result.Count);
-            Assert.AreEqual(sessions[1].StartTime, result[0].StartTime);
-            Assert.AreEqual(sessions[1].EndTime, result[0].EndTime);
-            Assert.AreEqual(sessions[2].StartTime, result[1].StartTime);
-            Assert.AreEqual(sessions[2].EndTime, result[1].EndTime);
-            Assert.AreEqual(sessions[3].StartTime, result[2].StartTime);
-            Assert.AreEqual(sessions[3].EndTime, result[2].EndTime);
+            Assert.AreEqual(sessions[1].Id, result[0].Id);
+            Assert.AreEqual(sessions[2].Id, result[1].Id);
+            Assert.AreEqual(sessions[3].Id, result[2].Id);
         }
 
         [TearDown]

@@ -1,4 +1,5 @@
 using Core.Models.TimeSession;
+using MongoDB.Bson;
 using NUnit.Framework;
 using Service.Repositories;
 using System;
@@ -49,16 +50,14 @@ namespace Services.Test.IntegrationTests.Repositories
         {
             var sessions = new List<FocusSession>
             {
-                new FocusSession { UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), TargetDuration = 2.5 }
+                new FocusSession { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), TargetDuration = 2.5 }
             };
 
             await _repository.Add(sessions).ConfigureAwait(false);
 
             var result = await _repository.GetActiveFocusSession("user_id").ConfigureAwait(false);
 
-            Assert.AreEqual(2.5, result.TargetDuration);
-            Assert.IsTrue(Math.Abs((sessions[0].StartTime - result.StartTime).TotalMinutes) < 1);
-            Assert.IsNull(result.EndTime);
+            Assert.AreEqual(sessions[0].Id, result.Id);
         }
 
         [TearDown]
