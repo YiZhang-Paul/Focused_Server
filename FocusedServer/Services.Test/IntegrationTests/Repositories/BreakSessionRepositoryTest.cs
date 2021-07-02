@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using WebApi.AppStart;
 
 namespace Services.Test.IntegrationTests.Repositories
 {
@@ -17,7 +16,6 @@ namespace Services.Test.IntegrationTests.Repositories
         [OneTimeSetUp]
         public void Setup()
         {
-            CustomBsonSerializers.Register();
             _repository = new BreakSessionRepository(ConfigurationUtility.GetDatabaseConfiguration());
         }
 
@@ -26,7 +24,7 @@ namespace Services.Test.IntegrationTests.Repositories
         {
             var sessions = new List<BreakSession>
             {
-                new BreakSession { UserId = "user_id", StartTime = DateTime.UtcNow.AddHours(-2), EndTime = DateTime.UtcNow.AddHours(-1) }
+                new BreakSession { UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), EndTime = DateTime.Now.AddHours(-1) }
             };
 
             await _repository.Add(sessions).ConfigureAwait(false);

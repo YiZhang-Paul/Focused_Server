@@ -2,7 +2,7 @@ using Core.Configurations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
-namespace Services.Test.IntegrationTests
+namespace Services.Test
 {
     public static class ConfigurationUtility
     {

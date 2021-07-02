@@ -17,7 +17,7 @@ namespace Service.Repositories
         {
             var sessions = await GetOpenTimeRange(userId).ConfigureAwait(false);
 
-            return sessions.LastOrDefault(_ => _.StartTime.AddHours(_.TargetDuration) >= DateTime.UtcNow);
+            return sessions.LastOrDefault(_ => _.StartTime.AddHours(_.TargetDuration) >= DateTime.Now);
         }
     }
 }
