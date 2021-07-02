@@ -1,0 +1,1 @@
+dotnet test ./FocusedServer/FocusedServer.sln /p:CollectCoverage=true /p:CoverletOutput=../../coverage\ /p:CoverletOutputFormat=cobertura

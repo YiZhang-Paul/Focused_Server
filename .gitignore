@@ -1,6 +1,7 @@
 bin/
 obj/
+coverage/
+TestStore/
 .suo
 .dtbcache.*
-TestStore/
 appsettings.Local.json
