@@ -5,3 +5,4 @@ TestStore/
 .suo
 .dtbcache.*
 appsettings.Local.json
+appsettings.Test.json
