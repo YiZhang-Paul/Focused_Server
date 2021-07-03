@@ -61,11 +61,6 @@ namespace Service.Services
             return await WorkItemRepository.Replace(item).ConfigureAwait(false);
         }
 
-        public async Task<bool> DeleteWorkItem(string userId, string id)
-        {
-            return await WorkItemRepository.Delete(userId, id).ConfigureAwait(false);
-        }
-
         public async Task<bool> StartWorkItem(string userId, string id)
         {
             var item = await GetWorkItem(userId, id).ConfigureAwait(false);
@@ -116,16 +111,6 @@ namespace Service.Services
             item.Status = WorkItemStatus.Highlighted;
 
             return await TimeSeriesRepository.Replace(series).ConfigureAwait(false) != null && await UpdateWorkItem(item).ConfigureAwait(false) != null;
-        }
-
-        public async Task<WorkItemDto> GetWorkItemMeta(string userId, string id)
-        {
-            return await WorkItemRepository.GetWorkItemMeta(userId, id).ConfigureAwait(false);
-        }
-
-        public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, WorkItemQuery query)
-        {
-            return await WorkItemRepository.GetWorkItemMetas(userId, query).ConfigureAwait(false);
         }
 
         public async Task<WorkItemDto> UpdateWorkItemMeta(WorkItemDto item)

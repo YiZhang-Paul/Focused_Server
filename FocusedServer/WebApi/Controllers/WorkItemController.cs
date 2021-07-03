@@ -1,4 +1,5 @@
 using Core.Dtos;
+using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Models.WorkItem;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +13,12 @@ namespace WebApi.Controllers
     public class WorkItemController : ControllerBase
     {
         private const string UserId = "60cd1862629e063c384f3ea1";
+        private IWorkItemRepository WorkItemRepository { get; set; }
         private IWorkItemService WorkItemService { get; set; }
 
-        public WorkItemController(IWorkItemService workItemService)
+        public WorkItemController(IWorkItemRepository workItemRepository, IWorkItemService workItemService)
         {
+            WorkItemRepository = workItemRepository;
             WorkItemService = workItemService;
         }
 
@@ -46,7 +49,7 @@ namespace WebApi.Controllers
         [Route("{id}")]
         public async Task<bool> DeleteWorkItem(string id)
         {
-            return await WorkItemService.DeleteWorkItem(UserId, id).ConfigureAwait(false);
+            return await WorkItemRepository.Delete(UserId, id).ConfigureAwait(false);
         }
 
         [HttpPost]
@@ -67,7 +70,7 @@ namespace WebApi.Controllers
         [Route("{id}/meta")]
         public async Task<WorkItemDto> GetWorkItemMeta(string id)
         {
-            return await WorkItemService.GetWorkItemMeta(UserId, id).ConfigureAwait(false);
+            return await WorkItemRepository.GetWorkItemMeta(UserId, id).ConfigureAwait(false);
         }
 
         [HttpPut]
@@ -81,7 +84,7 @@ namespace WebApi.Controllers
         [Route("summaries")]
         public async Task<List<WorkItemDto>> GetWorkItemSummaries([FromBody]WorkItemQuery query)
         {
-            return await WorkItemService.GetWorkItemMetas(UserId, query).ConfigureAwait(false);
+            return await WorkItemRepository.GetWorkItemMetas(UserId, query).ConfigureAwait(false);
         }
     }
 }
