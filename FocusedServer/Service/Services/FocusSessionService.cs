@@ -2,6 +2,7 @@ using Core.Dtos;
 using Core.Enums;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Core.Models.TimeSession;
 using Service.Utilities;
 using System;
 using System.Threading.Tasks;
@@ -53,6 +54,30 @@ namespace Service.Services
                 Activities = progress,
                 WorkItems = await WorkItemRepository.GetWorkItemMetas(userId, ids).ConfigureAwait(false)
             };
+        }
+
+        public async Task<bool> StartFocusSession(string userId, FocusSessionStartupOption option)
+        {
+            if (option.StartingItem == null || await FocusSessionRepository.GetActiveFocusSession(userId).ConfigureAwait(false) != null)
+            {
+                return false;
+            }
+
+            var session = new FocusSession
+            {
+                UserId = userId,
+                StartTime = DateTime.Now,
+                TargetDuration = (double)option.TotalMinutes / 60
+            };
+
+            var id = await FocusSessionRepository.Add(session).ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return false;
+            }
+
+            return await WorkItemService.StartWorkItem(userId, option.StartingItem.Id).ConfigureAwait(false);
         }
 
         public async Task<double> GetOverlearningHoursByDateRange(string userId, DateTime start, DateTime end)

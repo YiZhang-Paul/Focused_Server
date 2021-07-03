@@ -28,6 +28,13 @@ namespace WebApi.Controllers
             return await FocusSessionService.GetActiveFocusSessionMeta(UserId).ConfigureAwait(false);
         }
 
+        [HttpPost]
+        [Route("focus-session")]
+        public async Task<bool> StartFocusSession([FromBody]FocusSessionStartupOption option)
+        {
+            return await FocusSessionService.StartFocusSession(UserId, option).ConfigureAwait(false);
+        }
+
         [HttpGet]
         [Route("active-break-session")]
         public async Task<BreakSession> GetActiveBreakSession()
