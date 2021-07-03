@@ -16,6 +16,7 @@ namespace Service.Utilities
                 Id = item.Id,
                 UserId = item.UserId,
                 Name = item.Name,
+                Description = item.Description,
                 Type = item.Type,
                 Priority = item.Priority,
                 Status = item.Status,
