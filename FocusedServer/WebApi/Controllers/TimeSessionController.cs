@@ -35,6 +35,13 @@ namespace WebApi.Controllers
             return await FocusSessionService.GetActiveFocusSessionMeta(UserId).ConfigureAwait(false);
         }
 
+        [HttpGet]
+        [Route("stale-focus-session/meta")]
+        public async Task<FocusSessionDto> GetStaleFocusSessionMeta()
+        {
+            return await FocusSessionService.GetStaleFocusSessionMeta(UserId).ConfigureAwait(false);
+        }
+
         [HttpPost]
         [Route("focus-session/start")]
         public async Task<bool> StartFocusSession([FromBody]FocusSessionStartupOption option)
