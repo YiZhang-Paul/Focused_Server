@@ -39,7 +39,7 @@ namespace Service.Services
                 return null;
             }
 
-            var end = session.EndTime ?? DateTime.UtcNow;
+            var end = session.EndTime ?? DateTime.Now;
             var ids = await TimeSeriesRepository.GetDataSourceIdsByDateRange(userId, session.StartTime, end, TimeSeriesType.WorkItem).ConfigureAwait(false);
             var progress = await WorkItemService.GetWorkItemActivityBreakdownByDateRange(userId, session.StartTime, end).ConfigureAwait(false);
             progress.Overlearning = await GetOverlearningHoursByDateRange(userId, session.StartTime, end).ConfigureAwait(false);
@@ -78,6 +78,25 @@ namespace Service.Services
             }
 
             return await WorkItemService.StartWorkItem(userId, option.StartingItem.Id).ConfigureAwait(false);
+        }
+
+        public async Task<bool> StopFocusSession(string userId)
+        {
+            var session = await FocusSessionRepository.GetActiveFocusSession(userId).ConfigureAwait(false);
+
+            if (session == null)
+            {
+                return true;
+            }
+
+            session.EndTime = DateTime.Now;
+
+            if(await FocusSessionRepository.Replace(session).ConfigureAwait(false) == null)
+            {
+                return false;
+            }
+
+            return await WorkItemService.StopWorkItem(userId).ConfigureAwait(false);
         }
 
         public async Task<double> GetOverlearningHoursByDateRange(string userId, DateTime start, DateTime end)

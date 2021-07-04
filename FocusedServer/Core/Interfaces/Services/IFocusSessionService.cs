@@ -9,6 +9,7 @@ namespace Core.Interfaces.Services
     {
         Task<FocusSessionDto> GetActiveFocusSessionMeta(string userId);
         Task<bool> StartFocusSession(string userId, FocusSessionStartupOption option);
+        Task<bool> StopFocusSession(string userId);
         Task<double> GetOverlearningHoursByDateRange(string userId, DateTime start, DateTime end);
     }
 }
