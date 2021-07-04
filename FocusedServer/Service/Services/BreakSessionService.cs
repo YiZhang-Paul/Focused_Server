@@ -1,5 +1,6 @@
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Core.Models.TimeSession;
 using Service.Utilities;
 using System;
 using System.Threading.Tasks;
@@ -20,6 +21,33 @@ namespace Service.Services
             var sessions = await BreakSessionRepository.GetBreakSessionByDateRange(userId, start, end).ConfigureAwait(false);
 
             return TimeSeriesUtility.GetTotalTime(sessions, start, end);
+        }
+
+        public async Task<bool> StartBreakSession(string userId, BreakSessionStartupOption option)
+        {
+            if (string.IsNullOrWhiteSpace(option.FocusSessionId))
+            {
+                return false;
+            }
+
+            var focusSession = await BreakSessionRepository.Get(userId, option.FocusSessionId).ConfigureAwait(false);
+
+            if (focusSession?.EndTime == null || await BreakSessionRepository.GetActiveBreakSession(userId).ConfigureAwait(false) != null)
+            {
+                return false;
+            }
+
+            var session = new BreakSession
+            {
+                UserId = userId,
+                StartTime = DateTime.Now,
+                FocusSessionId = option.FocusSessionId,
+                TargetDuration = (double)option.TotalMinutes / 60
+            };
+
+            var id = await BreakSessionRepository.Add(session).ConfigureAwait(false);
+
+            return !string.IsNullOrWhiteSpace(id);
         }
     }
 }

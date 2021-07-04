@@ -13,11 +13,18 @@ namespace WebApi.Controllers
     {
         private const string UserId = "60cd1862629e063c384f3ea1";
         private IBreakSessionRepository BreakSessionRepository { get; set; }
+        private IBreakSessionService BreakSessionService { get; set; }
         private IFocusSessionService FocusSessionService { get; set; }
 
-        public TimeSessionController(IBreakSessionRepository breakSessionRepository, IFocusSessionService focusSessionService)
+        public TimeSessionController
+        (
+            IBreakSessionRepository breakSessionRepository,
+            IBreakSessionService breakSessionService,
+            IFocusSessionService focusSessionService
+        )
         {
             BreakSessionRepository = breakSessionRepository;
+            BreakSessionService = breakSessionService;
             FocusSessionService = focusSessionService;
         }
 
@@ -47,6 +54,13 @@ namespace WebApi.Controllers
         public async Task<BreakSession> GetActiveBreakSession()
         {
             return await BreakSessionRepository.GetActiveBreakSession(UserId).ConfigureAwait(false);
+        }
+
+        [HttpPost]
+        [Route("break-session/start")]
+        public async Task<bool> StartBreakSession([FromBody]BreakSessionStartupOption option)
+        {
+            return await BreakSessionService.StartBreakSession(UserId, option).ConfigureAwait(false);
         }
     }
 }
