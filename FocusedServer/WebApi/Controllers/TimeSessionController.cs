@@ -39,6 +39,13 @@ namespace WebApi.Controllers
         [Route("focus-session/start")]
         public async Task<bool> StartFocusSession([FromBody]FocusSessionStartupOption option)
         {
+            var session = await BreakSessionRepository.GetActiveBreakSession(UserId).ConfigureAwait(false);
+
+            if (session != null && !await BreakSessionService.StopBreakSession(UserId, session.Id).ConfigureAwait(false))
+            {
+                return false;
+            }
+
             return await FocusSessionService.StartFocusSession(UserId, option).ConfigureAwait(false);
         }
 
