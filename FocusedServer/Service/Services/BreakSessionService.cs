@@ -22,10 +22,10 @@ namespace Service.Services
         {
             if (isStale)
             {
-                return await BreakSessionRepository.GetUnfinishedBreakSession(userId).ConfigureAwait(false);
+                return await BreakSessionRepository.GetStaleBreakSession(userId).ConfigureAwait(false);
             }
 
-            return await BreakSessionRepository.GetStaleBreakSession(userId).ConfigureAwait(false);
+            return await BreakSessionRepository.GetUnfinishedBreakSession(userId).ConfigureAwait(false);
         }
 
         public async Task<double> GetBreakDurationByDateRange(string userId, DateTime start, DateTime end)
