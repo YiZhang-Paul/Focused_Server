@@ -1,23 +1,23 @@
 using Core.Configurations;
-using Core.Models;
+using Core.Interfaces.Repositories;
+using Core.Models.TimeSession;
 using Microsoft.Extensions.Options;
-using MongoDB.Driver;
+using Service.Repositories.RepositoryBase;
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Service.Repositories
 {
-    public class FocusSessionRepository : DatabaseConnector<FocusSession>
+    public class FocusSessionRepository : TimeRangeRecordRepository<FocusSession>, IFocusSessionRepository
     {
         public FocusSessionRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(FocusSession).Name) { }
 
-        public async Task<List<FocusSession>> GetFocusSessionsByDateRange(DateTime start, DateTime end)
+        public async Task<FocusSession> GetActiveFocusSession(string userId)
         {
-            var builder = Builders<FocusSession>.Filter;
-            var filter = builder.Gte(_ => _.StartTime, start) & builder.Lte(_ => _.EndTime, end);
+            var sessions = await GetOpenTimeRange(userId).ConfigureAwait(false);
 
-            return await Collection.Find(filter).ToListAsync().ConfigureAwait(false);
+            return sessions.LastOrDefault(_ => _.StartTime.AddHours(_.TargetDuration) >= DateTime.Now);
         }
     }
 }

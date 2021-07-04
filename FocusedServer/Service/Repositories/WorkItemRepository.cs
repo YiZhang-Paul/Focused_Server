@@ -1,10 +1,15 @@
 using Core.Configurations;
 using Core.Dtos;
 using Core.Enums;
+using Core.Interfaces.Repositories;
+using Core.Models.Aggregates;
 using Core.Models.Generic;
+using Core.Models.TimeSession;
 using Core.Models.WorkItem;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using Service.Repositories.RepositoryBase;
+using Service.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,75 +17,97 @@ using System.Threading.Tasks;
 
 namespace Service.Repositories
 {
-    public class WorkItemRepository : DatabaseConnector<WorkItem>
+    public class WorkItemRepository : UserOwnedRecordRepository<WorkItem>, IWorkItemRepository
     {
         public WorkItemRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(WorkItem).Name) { }
 
-        public async Task<WorkItemDto> GetWorkItemMeta(string id)
+        public async Task<List<WorkItem>> GetWorkItems(string userId, WorkItemStatus status)
         {
-            return ToWorkItemDto(await Get(id).ConfigureAwait(false));
+            var builder = Builders<WorkItem>.Filter;
+            var filter = builder.Eq(_ => _.UserId, userId) & builder.Eq(_ => _.Status, status);
+
+            return await Collection.Find(filter).ToListAsync().ConfigureAwait(false);
         }
 
-        public async Task<long> GetPastDueWorkItemsCount(DateTime start, DateTime end)
+        public async Task<WorkItemDto> GetWorkItemMeta(string userId, string id)
+        {
+            var builder = Builders<WorkItem>.Filter;
+            var filter = builder.Eq(_ => _.UserId, userId) & builder.Eq(_ => _.Id, id);
+            var item = await GetWorkItemWithTimeSeriesAggregate(filter).FirstOrDefaultAsync().ConfigureAwait(false);
+
+            return item == null ? null : WorkItemUtility.ToWorkItemDto(item);
+        }
+
+        public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, List<string> ids)
+        {
+            var builder = Builders<WorkItem>.Filter;
+            var filter = builder.Eq(_ => _.UserId, userId) & builder.In(_ => _.Id, ids);
+            var items = await GetWorkItemWithTimeSeriesAggregate(filter).ToListAsync().ConfigureAwait(false);
+
+            return items.Select(WorkItemUtility.ToWorkItemDto).ToList();
+        }
+
+        public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, WorkItemQuery query)
+        {
+            var filter = GetFilter(userId, query);
+            var items = await GetWorkItemWithTimeSeriesAggregate(filter, query.Skip, query.Limit).ToListAsync().ConfigureAwait(false);
+
+            return items.Select(WorkItemUtility.ToWorkItemDto).ToList();
+        }
+
+        public async Task<long> GetPastDueWorkItemsCount(string userId, DateTime start, DateTime end)
         {
             var builder = Builders<WorkItem>.Filter;
 
             var filter = builder.And(
+                builder.Eq(_ => _.UserId, userId),
                 builder.Gte(_ => _.DueDate, start),
                 builder.Lte(_ => _.DueDate, end),
-                builder.Lte(_ => _.DueDate, DateTime.UtcNow)
+                builder.Lte(_ => _.DueDate, DateTime.Now)
             );
 
             return await Collection.CountDocumentsAsync(filter).ConfigureAwait(false);
         }
 
-        public async Task<long> GetLoomingWorkItemsCount(DateTime start, DateTime end)
+        public async Task<long> GetLoomingWorkItemsCount(string userId, DateTime start, DateTime end)
         {
             var builder = Builders<WorkItem>.Filter;
 
             var filter = builder.And(
+                builder.Eq(_ => _.UserId, userId),
                 builder.Gte(_ => _.DueDate, start),
                 builder.Lte(_ => _.DueDate, end),
-                builder.Gt(_ => _.DueDate, DateTime.UtcNow)
+                builder.Gt(_ => _.DueDate, DateTime.Now)
             );
 
             return await Collection.CountDocumentsAsync(filter).ConfigureAwait(false);
         }
 
-        public async Task<List<WorkItemDto>> GetWorkItemMetas(WorkItemQuery query)
+        public async Task<List<WorkItemProgressionDto>> GetWorkItemProgressionByDateRange(string userId, List<string> ids, DateTime start, DateTime end)
         {
-            return await Collection.Find(GetFilter(query))
-                .Skip(query.Skip)
-                .Limit(query.Limit)
-                .Project(_ => ToWorkItemDto(_))
-                .ToListAsync()
-                .ConfigureAwait(false);
-        }
+            var builder = Builders<WorkItem>.Filter;
+            var filter = builder.Eq(_ => _.UserId, userId) & builder.In(_ => _.Id, ids);
+            var items = await GetWorkItemWithTimeSeriesAggregate(filter).ToListAsync().ConfigureAwait(false);
 
-        public async Task<List<WorkItemProgressionDto>> GetWorkItemProgressionByDateRange(List<string> ids, DateTime? start, DateTime? end)
-        {
-            var filter = Builders<WorkItem>.Filter.In(_ => _.Id, ids);
-
-            return await Collection.Find(filter)
-                .Project(_ => new WorkItemProgressionDto
+            return items.Select(_ => new WorkItemProgressionDto
+            {
+                Id = _.Id,
+                UserId = _.UserId,
+                Type = _.Type,
+                Progress = new ProgressionCounter<double>
                 {
-                    Id = _.Id,
-                    Type = _.Type,
-                    Progress = new ProgressionCounter<double>
-                    {
-                        Current = GetTotalTime(_.TimeSeries, start, end),
-                        Target = _.EstimatedHours,
-                        IsCompleted = _.Status == WorkItemStatus.Completed
-                    }
-                })
-                .ToListAsync()
-                .ConfigureAwait(false);
+                    Current = TimeSeriesUtility.GetTotalTime(_.TimeSeries, start, end),
+                    Target = _.EstimatedHours,
+                    IsCompleted = _.Status == WorkItemStatus.Completed
+                }
+            })
+            .ToList();
         }
 
-        private FilterDefinition<WorkItem> GetFilter(WorkItemQuery query)
+        private FilterDefinition<WorkItem> GetFilter(string userId, WorkItemQuery query)
         {
             var builder = Builders<WorkItem>.Filter;
-            var filter = builder.Or(builder.Eq(_ => _.Parent, null), builder.Regex(_ => _.Parent, @"^\W*$"));
+            var filter = builder.Eq(_ => _.UserId, userId);
 
             if (!string.IsNullOrWhiteSpace(query.SearchText))
             {
@@ -119,68 +146,15 @@ namespace Service.Repositories
             return filter;
         }
 
-        private WorkItemDto ToWorkItemDto(WorkItem item)
+        private IAggregateFluent<WorkItemWithTimeSeries> GetWorkItemWithTimeSeriesAggregate(FilterDefinition<WorkItem> filter, int skip = 0, int limit = 0)
         {
-            return new WorkItemDto
-            {
-                Id = item.Id,
-                Name = item.Name,
-                Type = item.Type,
-                Priority = item.Priority,
-                Status = item.Status,
-                DueDate = item.DueDate,
-                ItemProgress = new ProgressionCounter<double>
-                {
-                    Current = GetTotalTime(item.TimeSeries, null, null),
-                    Target = item.EstimatedHours,
-                    IsCompleted = item.Status == WorkItemStatus.Completed
-                },
-                SubtaskProgress = new ProgressionCounter<int>
-                {
-                    Current = item.Subtasks.Count(_ => _.Status == WorkItemStatus.Completed),
-                    Target = item.Subtasks.Count,
-                    IsCompleted = item.Subtasks.All(_ => _.Status == WorkItemStatus.Completed)
-                },
-                ChecklistProgress = new ProgressionCounter<int>
-                {
-                    Current = item.Checklist.Count(_ => _.IsCompleted),
-                    Target = item.Checklist.Count,
-                    IsCompleted = item.Checklist.All(_ => _.IsCompleted)
-                }
-            };
-        }
+            var foreignCollection = Connect<TimeSeries>(typeof(TimeSeries).Name);
+            var aggregate = Collection.Aggregate().Match(filter).Skip(skip);
+            aggregate = limit > 0 ? aggregate.Limit(limit) : aggregate;
 
-        private double GetTotalTime(TimeSeries series, DateTime? start, DateTime? end)
-        {
-            var total = series.ManualTracking;
-            var autoTracking = series.AutoTracking.Take(series.AutoTracking.Count / 2 * 2).ToList();
-
-            for (var i = 0; i < autoTracking.Count - 1; i += 2)
-            {
-                var begin = autoTracking[i];
-                var stop = autoTracking[i + 1];
-
-                if (IsValidTimeEvent(begin, TimeEventType.Begin, start, end) && IsValidTimeEvent(stop, TimeEventType.Stop, start, end))
-                {
-                    total += (stop.Time - begin.Time).TotalHours;
-                }
-            }
-
-            if (series.AutoTracking.Any() && IsValidTimeEvent(series.AutoTracking.Last(), TimeEventType.Begin, start, end))
-            {
-                var now = end.HasValue && end < DateTime.UtcNow ? end.Value : DateTime.UtcNow;
-                total += (now - series.AutoTracking.Last().Time).TotalHours;
-            }
-
-            return total;
-        }
-
-        private bool IsValidTimeEvent(TimeEvent timeEvent, TimeEventType type, DateTime? start, DateTime? end)
-        {
-            var isValidStart = !start.HasValue || timeEvent.Time >= start;
-            var isValidEnd = !end.HasValue || timeEvent.Time <= end;
-
-            return isValidStart && isValidEnd && timeEvent.Type == type;
+            return aggregate
+                .AppendStage<WorkItemWithTimeSeries>("{ $addFields: { WorkItemId: { $toString: '$_id' } } }")
+                .Lookup(foreignCollection, _ => _.WorkItemId, _ => _.DataSourceId, (WorkItemWithTimeSeries _) => _.TimeSeries);
         }
     }
 }

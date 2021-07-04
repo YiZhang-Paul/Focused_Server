@@ -1,24 +1,53 @@
-using Service.Repositories;
+using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
+using Core.Models.TimeSession;
+using Service.Utilities;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Service.Services
 {
-    public class BreakSessionService
+    public class BreakSessionService : IBreakSessionService
     {
-        private BreakSessionRepository BreakSessionRepository { get; set; }
+        private IBreakSessionRepository BreakSessionRepository { get; set; }
 
-        public BreakSessionService(BreakSessionRepository breakSessionRepository)
+        public BreakSessionService(IBreakSessionRepository breakSessionRepository)
         {
             BreakSessionRepository = breakSessionRepository;
         }
 
-        public async Task<double> GetBreakDurationByDateRange(DateTime start, DateTime end)
+        public async Task<double> GetBreakDurationByDateRange(string userId, DateTime start, DateTime end)
         {
-            var sessions = await BreakSessionRepository.GetBreakSessionByDateRange(start, end).ConfigureAwait(false);
+            var sessions = await BreakSessionRepository.GetBreakSessionByDateRange(userId, start, end).ConfigureAwait(false);
 
-            return sessions.Sum(_ => (_.EndTime - _.StartTime).TotalHours);
+            return TimeSeriesUtility.GetTotalTime(sessions, start, end);
+        }
+
+        public async Task<bool> StartBreakSession(string userId, BreakSessionStartupOption option)
+        {
+            if (string.IsNullOrWhiteSpace(option.FocusSessionId))
+            {
+                return false;
+            }
+
+            var focusSession = await BreakSessionRepository.Get(userId, option.FocusSessionId).ConfigureAwait(false);
+
+            if (focusSession?.EndTime == null || await BreakSessionRepository.GetActiveBreakSession(userId).ConfigureAwait(false) != null)
+            {
+                return false;
+            }
+
+            var session = new BreakSession
+            {
+                UserId = userId,
+                StartTime = DateTime.Now,
+                FocusSessionId = option.FocusSessionId,
+                TargetDuration = (double)option.TotalMinutes / 60
+            };
+
+            var id = await BreakSessionRepository.Add(session).ConfigureAwait(false);
+
+            return !string.IsNullOrWhiteSpace(id);
         }
     }
 }

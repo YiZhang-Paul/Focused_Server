@@ -1,7 +1,8 @@
 using Core.Dtos;
+using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
 using Core.Models.WorkItem;
 using Microsoft.AspNetCore.Mvc;
-using Service.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -11,10 +12,13 @@ namespace WebApi.Controllers
     [ApiController]
     public class WorkItemController : ControllerBase
     {
-        private WorkItemService WorkItemService { get; set; }
+        private const string UserId = "60cd1862629e063c384f3ea1";
+        private IWorkItemRepository WorkItemRepository { get; set; }
+        private IWorkItemService WorkItemService { get; set; }
 
-        public WorkItemController(WorkItemService workItemService)
+        public WorkItemController(IWorkItemRepository workItemRepository, IWorkItemService workItemService)
         {
+            WorkItemRepository = workItemRepository;
             WorkItemService = workItemService;
         }
 
@@ -22,6 +26,8 @@ namespace WebApi.Controllers
         [Route("")]
         public async Task<string> CreateWorkItem([FromBody]WorkItemDto item)
         {
+            item.UserId = UserId;
+
             return await WorkItemService.CreateWorkItem(item).ConfigureAwait(false);
         }
 
@@ -29,11 +35,11 @@ namespace WebApi.Controllers
         [Route("{id}")]
         public async Task<WorkItem> GetWorkItem(string id)
         {
-            return await WorkItemService.GetWorkItem(id).ConfigureAwait(false);
+            return await WorkItemService.GetWorkItem(UserId, id).ConfigureAwait(false);
         }
 
         [HttpPut]
-        [Route("{id}")]
+        [Route("")]
         public async Task<WorkItem> UpdateWorkItem([FromBody]WorkItem item)
         {
             return await WorkItemService.UpdateWorkItem(item).ConfigureAwait(false);
@@ -43,28 +49,42 @@ namespace WebApi.Controllers
         [Route("{id}")]
         public async Task<bool> DeleteWorkItem(string id)
         {
-            return await WorkItemService.DeleteWorkItem(id).ConfigureAwait(false);
+            return await WorkItemRepository.Delete(UserId, id).ConfigureAwait(false);
+        }
+
+        [HttpPost]
+        [Route("{id}/start")]
+        public async Task<bool> StartWorkItem(string id)
+        {
+            return await WorkItemService.StartWorkItem(UserId, id).ConfigureAwait(false);
+        }
+
+        [HttpPost]
+        [Route("stop")]
+        public async Task<bool> StopWorkItem()
+        {
+            return await WorkItemService.StopWorkItem(UserId).ConfigureAwait(false);
         }
 
         [HttpGet]
         [Route("{id}/meta")]
         public async Task<WorkItemDto> GetWorkItemMeta(string id)
         {
-            return await WorkItemService.GetWorkItemMeta(id).ConfigureAwait(false);
+            return await WorkItemRepository.GetWorkItemMeta(UserId, id).ConfigureAwait(false);
         }
 
         [HttpPut]
-        [Route("{id}/meta")]
-        public async Task<WorkItemDto> UpdateWorkItemMeta([FromBody]WorkItemDto item, string id)
+        [Route("meta")]
+        public async Task<WorkItemDto> UpdateWorkItemMeta([FromBody]WorkItemDto item)
         {
-            return await WorkItemService.UpdateWorkItemMeta(item, id).ConfigureAwait(false);
+            return await WorkItemService.UpdateWorkItemMeta(item).ConfigureAwait(false);
         }
 
         [HttpPost]
         [Route("summaries")]
         public async Task<List<WorkItemDto>> GetWorkItemSummaries([FromBody]WorkItemQuery query)
         {
-            return await WorkItemService.GetWorkItemMetas(query).ConfigureAwait(false);
+            return await WorkItemRepository.GetWorkItemMetas(UserId, query).ConfigureAwait(false);
         }
     }
 }
