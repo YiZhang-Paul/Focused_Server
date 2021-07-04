@@ -61,7 +61,7 @@ namespace Service.Services
                 return false;
             }
 
-            session.EndTime = DateTime.Now;
+            session.EndTime = session.TargetEndTime < DateTime.Now ? session.TargetEndTime : DateTime.Now;
 
             return await BreakSessionRepository.Replace(session).ConfigureAwait(false) != null;
         }

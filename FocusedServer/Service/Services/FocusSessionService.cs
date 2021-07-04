@@ -73,7 +73,7 @@ namespace Service.Services
                 return false;
             }
 
-            session.EndTime = DateTime.Now;
+            session.EndTime = session.TargetEndTime < DateTime.Now ? session.TargetEndTime : DateTime.Now;
 
             if(await FocusSessionRepository.Replace(session).ConfigureAwait(false) == null)
             {
@@ -101,7 +101,7 @@ namespace Service.Services
                 return null;
             }
 
-            var end = isStale ? session.StartTime.AddHours(session.TargetDuration) : DateTime.Now;
+            var end = isStale ? session.TargetEndTime : DateTime.Now;
             var ids = await TimeSeriesRepository.GetDataSourceIdsByDateRange(userId, session.StartTime, end, TimeSeriesType.WorkItem).ConfigureAwait(false);
             var progress = await WorkItemService.GetWorkItemActivityBreakdownByDateRange(userId, session.StartTime, end).ConfigureAwait(false);
             progress.Overlearning = await GetOverlearningHoursByDateRange(userId, session.StartTime, end).ConfigureAwait(false);

@@ -1,4 +1,5 @@
 using Core.Models.Generic;
+using System;
 
 namespace Core.Models.TimeSession
 {
@@ -7,5 +8,6 @@ namespace Core.Models.TimeSession
         public string FocusSessionId { get; set; }
         public double TargetDuration { get; set; }
         public bool IsLongBreak { get; set; }
+        public DateTime TargetEndTime => StartTime.AddHours(TargetDuration);
     }
 }
