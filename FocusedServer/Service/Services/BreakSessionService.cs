@@ -9,10 +9,12 @@ namespace Service.Services
 {
     public class BreakSessionService : IBreakSessionService
     {
+        private IFocusSessionRepository FocusSessionRepository { get; set; }
         private IBreakSessionRepository BreakSessionRepository { get; set; }
 
-        public BreakSessionService(IBreakSessionRepository breakSessionRepository)
+        public BreakSessionService(IFocusSessionRepository focusSessionRepository, IBreakSessionRepository breakSessionRepository)
         {
+            FocusSessionRepository = focusSessionRepository;
             BreakSessionRepository = breakSessionRepository;
         }
 
@@ -30,7 +32,7 @@ namespace Service.Services
                 return false;
             }
 
-            var focusSession = await BreakSessionRepository.Get(userId, option.FocusSessionId).ConfigureAwait(false);
+            var focusSession = await FocusSessionRepository.Get(userId, option.FocusSessionId).ConfigureAwait(false);
 
             if (focusSession?.EndTime == null || await BreakSessionRepository.GetActiveBreakSession(userId).ConfigureAwait(false) != null)
             {
