@@ -64,7 +64,7 @@ namespace Service.Services
         public async Task<bool> StartWorkItem(string userId, string id)
         {
             var item = await GetWorkItem(userId, id).ConfigureAwait(false);
-            var activeSession = await FocusSessionRepository.GetActiveFocusSession(item?.UserId ?? string.Empty).ConfigureAwait(false);
+            var activeSession = await FocusSessionRepository.GetUnfinishedFocusSession(item?.UserId ?? string.Empty).ConfigureAwait(false);
 
             if (item == null || activeSession == null)
             {

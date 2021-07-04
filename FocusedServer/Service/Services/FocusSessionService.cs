@@ -32,7 +32,7 @@ namespace Service.Services
 
         public async Task<FocusSessionDto> GetActiveFocusSessionMeta(string userId)
         {
-            var session = await FocusSessionRepository.GetActiveFocusSession(userId).ConfigureAwait(false);
+            var session = await FocusSessionRepository.GetUnfinishedFocusSession(userId).ConfigureAwait(false);
 
             if (session == null)
             {
@@ -58,7 +58,7 @@ namespace Service.Services
 
         public async Task<bool> StartFocusSession(string userId, FocusSessionStartupOption option)
         {
-            if (option.StartingItem == null || await FocusSessionRepository.GetActiveFocusSession(userId).ConfigureAwait(false) != null)
+            if (option.StartingItem == null || await FocusSessionRepository.GetUnfinishedFocusSession(userId).ConfigureAwait(false) != null)
             {
                 return false;
             }

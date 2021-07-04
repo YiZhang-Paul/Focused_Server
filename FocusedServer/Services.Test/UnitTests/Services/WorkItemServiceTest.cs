@@ -79,7 +79,7 @@ namespace Services.Test.UnitTests.Services
         public async Task StartWorkItemShouldReturnFalseWhenWorkItemDoesNotExist()
         {
             WorkItemRepository.Setup(_ => _.Get(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync((WorkItem)null);
-            FocusSessionRepository.Setup(_ => _.GetActiveFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
 
             Assert.IsFalse(await SubjectUnderTest.StartWorkItem("user_id", "item_id").ConfigureAwait(false));
         }
@@ -88,7 +88,7 @@ namespace Services.Test.UnitTests.Services
         public async Task StartWorkItemShouldReturnFalseWhenNoActiveFocusSessionExist()
         {
             WorkItemRepository.Setup(_ => _.Get(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(new WorkItem());
-            FocusSessionRepository.Setup(_ => _.GetActiveFocusSession(It.IsAny<string>())).ReturnsAsync((FocusSession)null);
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync((FocusSession)null);
 
             Assert.IsFalse(await SubjectUnderTest.StartWorkItem("user_id", "item_id").ConfigureAwait(false));
         }
@@ -99,7 +99,7 @@ namespace Services.Test.UnitTests.Services
             var items = new List<WorkItem> { new WorkItem { Id = "id_1" } };
             WorkItemRepository.Setup(_ => _.Get(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(new WorkItem());
             WorkItemRepository.Setup(_ => _.GetWorkItems(It.IsAny<string>(), It.IsAny<WorkItemStatus>())).ReturnsAsync(items);
-            FocusSessionRepository.Setup(_ => _.GetActiveFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
             TimeSeriesRepository.Setup(_ => _.GetTimeSeriesByDataSource(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(new List<TimeSeries>());
 
             Assert.IsFalse(await SubjectUnderTest.StartWorkItem("user_id", "item_id").ConfigureAwait(false));
@@ -110,7 +110,7 @@ namespace Services.Test.UnitTests.Services
         {
             WorkItemRepository.Setup(_ => _.Get(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(new WorkItem());
             WorkItemRepository.Setup(_ => _.GetWorkItems(It.IsAny<string>(), It.IsAny<WorkItemStatus>())).ReturnsAsync(new List<WorkItem>());
-            FocusSessionRepository.Setup(_ => _.GetActiveFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
             TimeSeriesRepository.Setup(_ => _.Add(It.IsAny<TimeSeries>())).ReturnsAsync(string.Empty);
 
             var result = await SubjectUnderTest.StartWorkItem("user_id", "item_id").ConfigureAwait(false);
@@ -126,7 +126,7 @@ namespace Services.Test.UnitTests.Services
             WorkItemRepository.Setup(_ => _.Get(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(new WorkItem());
             WorkItemRepository.Setup(_ => _.GetWorkItems(It.IsAny<string>(), It.IsAny<WorkItemStatus>())).ReturnsAsync(new List<WorkItem>());
             WorkItemRepository.Setup(_ => _.Replace(It.IsAny<WorkItem>())).ReturnsAsync((WorkItem)null);
-            FocusSessionRepository.Setup(_ => _.GetActiveFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
             TimeSeriesRepository.Setup(_ => _.Add(It.IsAny<TimeSeries>())).ReturnsAsync("time_series_id");
 
             var result = await SubjectUnderTest.StartWorkItem("user_id", "item_id").ConfigureAwait(false);
@@ -141,7 +141,7 @@ namespace Services.Test.UnitTests.Services
             WorkItemRepository.Setup(_ => _.Get(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(new WorkItem());
             WorkItemRepository.Setup(_ => _.GetWorkItems(It.IsAny<string>(), It.IsAny<WorkItemStatus>())).ReturnsAsync(new List<WorkItem>());
             WorkItemRepository.Setup(_ => _.Replace(It.IsAny<WorkItem>())).ReturnsAsync(new WorkItem());
-            FocusSessionRepository.Setup(_ => _.GetActiveFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
             TimeSeriesRepository.Setup(_ => _.Add(It.IsAny<TimeSeries>())).ReturnsAsync("time_series_id");
 
             var result = await SubjectUnderTest.StartWorkItem("user_id", "item_id").ConfigureAwait(false);

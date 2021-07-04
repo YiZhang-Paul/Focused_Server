@@ -29,7 +29,7 @@ namespace Services.Test.IntegrationTests.Repositories
 
             await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            Assert.IsNull(await SubjectUnderTest.GetActiveFocusSession("user_id").ConfigureAwait(false));
+            Assert.IsNull(await SubjectUnderTest.GetUnfinishedFocusSession("user_id").ConfigureAwait(false));
         }
 
         [Test]
@@ -42,7 +42,7 @@ namespace Services.Test.IntegrationTests.Repositories
 
             await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            Assert.IsNull(await SubjectUnderTest.GetActiveFocusSession("user_id").ConfigureAwait(false));
+            Assert.IsNull(await SubjectUnderTest.GetUnfinishedFocusSession("user_id").ConfigureAwait(false));
         }
 
         [Test]
@@ -55,7 +55,7 @@ namespace Services.Test.IntegrationTests.Repositories
 
             await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            var result = await SubjectUnderTest.GetActiveFocusSession("user_id").ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetUnfinishedFocusSession("user_id").ConfigureAwait(false);
 
             Assert.AreEqual(sessions[0].Id, result.Id);
         }

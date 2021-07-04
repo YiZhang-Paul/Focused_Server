@@ -41,7 +41,7 @@ namespace Services.Test.UnitTests.Services
         [Test]
         public async Task GetActiveFocusSessionMetaShouldReturnNullWhenNoActiveFocusSessionAvailable()
         {
-            FocusSessionRepository.Setup(_ => _.GetActiveFocusSession(It.IsAny<string>())).ReturnsAsync((FocusSession)null);
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync((FocusSession)null);
 
             Assert.IsNull(await SubjectUnderTest.GetActiveFocusSessionMeta("user_id").ConfigureAwait(false));
         }
@@ -60,7 +60,7 @@ namespace Services.Test.UnitTests.Services
 
             var session = new FocusSession { StartTime = new DateTime(2021, 1, 2, 5, 0, 0) };
             var breakdown = new ActivityBreakdownDto { Regular = 5, Recurring = 2, Interruption = 3 };
-            FocusSessionRepository.Setup(_ => _.GetActiveFocusSession(It.IsAny<string>())).ReturnsAsync(session);
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync(session);
             TimeSeriesRepository.Setup(_ => _.GetDataSourceIdsByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<TimeSeriesType>())).ReturnsAsync(new List<string>());
             TimeSeriesRepository.Setup(_ => _.GetTimeSeriesByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<TimeSeriesType>())).ReturnsAsync(series);
             WorkItemService.Setup(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(breakdown);
