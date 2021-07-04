@@ -7,18 +7,18 @@ namespace Services.Test.IntegrationTests.Repositories
     [TestFixture]
     public class UserProfileRepositoryTest
     {
-        private UserProfileRepository _repository;
+        private UserProfileRepository SubjectUnderTest { get; set; }
 
         [OneTimeSetUp]
         public void Setup()
         {
-            _repository = new UserProfileRepository(ConfigurationUtility.GetDatabaseConfiguration());
+            SubjectUnderTest = new UserProfileRepository(ConfigurationUtility.GetDatabaseConfiguration());
         }
 
         [Test]
         public async Task GetShouldReturnUserProfile()
         {
-            var result = await _repository.Get("60cd1862629e063c384f3ea1").ConfigureAwait(false);
+            var result = await SubjectUnderTest.Get("60cd1862629e063c384f3ea1").ConfigureAwait(false);
 
             Assert.AreEqual("Yi Zhang", result.Name);
         }

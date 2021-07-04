@@ -15,35 +15,35 @@ namespace Services.Test.UnitTests.Services
     [TestFixture]
     public class FocusSessionServiceTest
     {
-        private Mock<IWorkItemRepository> _workItemRepository;
-        private Mock<ITimeSeriesRepository> _timeSeriesRepository;
-        private Mock<IFocusSessionRepository> _focusSessionRepository;
-        private Mock<IWorkItemService> _workItemService;
-        private FocusSessionService _service;
+        private Mock<IWorkItemRepository> WorkItemRepository { get; set; }
+        private Mock<ITimeSeriesRepository> TimeSeriesRepository { get; set; }
+        private Mock<IFocusSessionRepository> FocusSessionRepository { get; set; }
+        private Mock<IWorkItemService> WorkItemService { get; set; }
+        private FocusSessionService SubjectUnderTest { get; set; }
 
         [SetUp]
         public void Setup()
         {
-            _workItemRepository = new Mock<IWorkItemRepository>();
-            _timeSeriesRepository = new Mock<ITimeSeriesRepository>();
-            _focusSessionRepository = new Mock<IFocusSessionRepository>();
-            _workItemService = new Mock<IWorkItemService>();
+            WorkItemRepository = new Mock<IWorkItemRepository>();
+            TimeSeriesRepository = new Mock<ITimeSeriesRepository>();
+            FocusSessionRepository = new Mock<IFocusSessionRepository>();
+            WorkItemService = new Mock<IWorkItemService>();
 
-            _service = new FocusSessionService
+            SubjectUnderTest = new FocusSessionService
             (
-                _workItemRepository.Object,
-                _timeSeriesRepository.Object,
-                _focusSessionRepository.Object,
-                _workItemService.Object
+                WorkItemRepository.Object,
+                TimeSeriesRepository.Object,
+                FocusSessionRepository.Object,
+                WorkItemService.Object
             );
         }
 
         [Test]
         public async Task GetActiveFocusSessionMetaShouldReturnNullWhenNoActiveFocusSessionAvailable()
         {
-            _focusSessionRepository.Setup(_ => _.GetActiveFocusSession(It.IsAny<string>())).ReturnsAsync((FocusSession)null);
+            FocusSessionRepository.Setup(_ => _.GetActiveFocusSession(It.IsAny<string>())).ReturnsAsync((FocusSession)null);
 
-            Assert.IsNull(await _service.GetActiveFocusSessionMeta("user_id").ConfigureAwait(false));
+            Assert.IsNull(await SubjectUnderTest.GetActiveFocusSessionMeta("user_id").ConfigureAwait(false));
         }
 
         [Test]
@@ -60,18 +60,18 @@ namespace Services.Test.UnitTests.Services
 
             var session = new FocusSession { StartTime = new DateTime(2021, 1, 2, 5, 0, 0) };
             var breakdown = new ActivityBreakdownDto { Regular = 5, Recurring = 2, Interruption = 3 };
-            _focusSessionRepository.Setup(_ => _.GetActiveFocusSession(It.IsAny<string>())).ReturnsAsync(session);
-            _timeSeriesRepository.Setup(_ => _.GetDataSourceIdsByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<TimeSeriesType>())).ReturnsAsync(new List<string>());
-            _timeSeriesRepository.Setup(_ => _.GetTimeSeriesByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<TimeSeriesType>())).ReturnsAsync(series);
-            _workItemService.Setup(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(breakdown);
+            FocusSessionRepository.Setup(_ => _.GetActiveFocusSession(It.IsAny<string>())).ReturnsAsync(session);
+            TimeSeriesRepository.Setup(_ => _.GetDataSourceIdsByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<TimeSeriesType>())).ReturnsAsync(new List<string>());
+            TimeSeriesRepository.Setup(_ => _.GetTimeSeriesByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<TimeSeriesType>())).ReturnsAsync(series);
+            WorkItemService.Setup(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(breakdown);
 
-            var result = await _service.GetActiveFocusSessionMeta("user_id").ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetActiveFocusSessionMeta("user_id").ConfigureAwait(false);
 
             Assert.AreEqual(5, result.Activities.Regular);
             Assert.AreEqual(2, result.Activities.Recurring);
             Assert.AreEqual(3, result.Activities.Interruption);
             Assert.AreEqual(2, result.Activities.Overlearning);
-            _workItemRepository.Verify(_ => _.GetWorkItemMetas(It.IsAny<string>(), It.IsAny<List<string>>()), Times.Once);
+            WorkItemRepository.Verify(_ => _.GetWorkItemMetas(It.IsAny<string>(), It.IsAny<List<string>>()), Times.Once);
         }
 
         [Test]
@@ -88,9 +88,9 @@ namespace Services.Test.UnitTests.Services
 
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 3);
-            _timeSeriesRepository.Setup(_ => _.GetTimeSeriesByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<TimeSeriesType>())).ReturnsAsync(sessions);
+            TimeSeriesRepository.Setup(_ => _.GetTimeSeriesByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<TimeSeriesType>())).ReturnsAsync(sessions);
 
-            var result = await _service.GetOverlearningHoursByDateRange("user_id", start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetOverlearningHoursByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.AreEqual(2, result);
         }

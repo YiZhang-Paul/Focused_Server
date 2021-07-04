@@ -10,12 +10,12 @@ namespace Services.Test.UnitTests.Utilities
     [TestFixture]
     public class TimeSeriesUtilityTest
     {
-        private List<TimeSeries> _series;
+        private List<TimeSeries> Series { get; set; }
 
         [SetUp]
         public void Setup()
         {
-            _series = new List<TimeSeries>
+            Series = new List<TimeSeries>
             {
                 new TimeSeries
                 {
@@ -52,7 +52,7 @@ namespace Services.Test.UnitTests.Utilities
             var start = new DateTime(2021, 1, 5, 12, 15, 0);
             var end = new DateTime(2021, 1, 7, 12, 15, 0);
 
-            Assert.AreEqual(1.5, TimeSeriesUtility.GetTotalTime(_series, start, end));
+            Assert.AreEqual(1.5, TimeSeriesUtility.GetTotalTime(Series, start, end));
         }
 
         [Test]
@@ -61,17 +61,17 @@ namespace Services.Test.UnitTests.Utilities
             var start = new DateTime(2021, 1, 5, 10, 15, 0);
             var end = new DateTime(2021, 1, 7, 12, 30, 0);
 
-            Assert.AreEqual(3.75, TimeSeriesUtility.GetTotalTime(_series, start, end));
+            Assert.AreEqual(3.75, TimeSeriesUtility.GetTotalTime(Series, start, end));
         }
 
         [Test]
         public void GetTotalTimeShouldIncludeOpenTimeRange()
         {
-            _series.Last().EndTime = null;
+            Series.Last().EndTime = null;
             var start = DateTime.Now.AddHours(-3);
             var end = DateTime.Now;
 
-            Assert.AreEqual(3, Math.Round(TimeSeriesUtility.GetTotalTime(_series, start, end), 2));
+            Assert.AreEqual(3, Math.Round(TimeSeriesUtility.GetTotalTime(Series, start, end), 2));
         }
     }
 }

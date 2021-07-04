@@ -15,26 +15,26 @@ namespace Services.Test.UnitTests.Services
     [TestFixture]
     public class PerformanceServiceTest
     {
-        private Mock<IWorkItemRepository> _workItemRepository;
-        private Mock<IWorkItemService> _workItemService;
-        private Mock<IFocusSessionService> _focusSessionService;
-        private Mock<IBreakSessionService> _breakSessionService;
-        private PerformanceService _service;
+        private Mock<IWorkItemRepository> WorkItemRepository { get; set; }
+        private Mock<IWorkItemService> WorkItemService { get; set; }
+        private Mock<IFocusSessionService> FocusSessionService { get; set; }
+        private Mock<IBreakSessionService> BreakSessionService { get; set; }
+        private PerformanceService SubjectUnderTest { get; set; }
 
         [SetUp]
         public void Setup()
         {
-            _workItemRepository = new Mock<IWorkItemRepository>();
-            _workItemService = new Mock<IWorkItemService>();
-            _focusSessionService = new Mock<IFocusSessionService>();
-            _breakSessionService = new Mock<IBreakSessionService>();
+            WorkItemRepository = new Mock<IWorkItemRepository>();
+            WorkItemService = new Mock<IWorkItemService>();
+            FocusSessionService = new Mock<IFocusSessionService>();
+            BreakSessionService = new Mock<IBreakSessionService>();
 
-            _service = new PerformanceService
+            SubjectUnderTest = new PerformanceService
             (
-                _workItemRepository.Object,
-                _workItemService.Object,
-                _focusSessionService.Object,
-                _breakSessionService.Object
+                WorkItemRepository.Object,
+                WorkItemService.Object,
+                FocusSessionService.Object,
+                BreakSessionService.Object
             );
         }
 
@@ -42,10 +42,10 @@ namespace Services.Test.UnitTests.Services
         public async Task GetFocusProgressionByDateShouldReturnDailyFocusProgression()
         {
             var breakdown = new ActivityBreakdownDto { Regular = 3, Recurring = 2.5, Interruption = 1 };
-            _workItemService.Setup(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(breakdown);
-            _focusSessionService.Setup(_ => _.GetOverlearningHoursByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(2.5);
+            WorkItemService.Setup(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(breakdown);
+            FocusSessionService.Setup(_ => _.GetOverlearningHoursByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(2.5);
 
-            var result = await _service.GetFocusProgressionByDate("user_id", 2021, 1, 1).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetFocusProgressionByDate("user_id", 2021, 1, 1).ConfigureAwait(false);
 
             Assert.AreEqual(8, result.Current);
             Assert.AreEqual(8, result.Target);
@@ -56,11 +56,11 @@ namespace Services.Test.UnitTests.Services
         public async Task GetTimeTrackingBreakdownByDateShouldReturnTimeTrackingBreakdown()
         {
             var breakdown = new ActivityBreakdownDto { Regular = 3, Recurring = 2.5, Interruption = 1 };
-            _workItemService.Setup(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(breakdown);
-            _focusSessionService.Setup(_ => _.GetOverlearningHoursByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(2.5);
-            _breakSessionService.Setup(_ => _.GetBreakDurationByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(4);
+            WorkItemService.Setup(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(breakdown);
+            FocusSessionService.Setup(_ => _.GetOverlearningHoursByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(2.5);
+            BreakSessionService.Setup(_ => _.GetBreakDurationByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(4);
 
-            var result = await _service.GetTimeTrackingBreakdownByDate("user_id", 2021, 1, 1).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetTimeTrackingBreakdownByDate("user_id", 2021, 1, 1).ConfigureAwait(false);
 
             Assert.AreEqual(9, result.ActivityTime);
             Assert.AreEqual(4, result.BreakTime);
@@ -73,7 +73,7 @@ namespace Services.Test.UnitTests.Services
             var start = new DateTime(2021, 1, 5);
             var end = new DateTime(2021, 1, 4);
 
-            var result = await _service.GetActivityBreakdownByDays("user_id", start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetActivityBreakdownByDays("user_id", start, end).ConfigureAwait(false);
 
             Assert.IsFalse(result.Any());
         }
@@ -84,14 +84,14 @@ namespace Services.Test.UnitTests.Services
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 10);
             var breakdown = new ActivityBreakdownDto { Regular = 1, Recurring = 1, Interruption = 1 };
-            _workItemService.Setup(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(breakdown);
-            _focusSessionService.Setup(_ => _.GetOverlearningHoursByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(1);
+            WorkItemService.Setup(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(breakdown);
+            FocusSessionService.Setup(_ => _.GetOverlearningHoursByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(1);
 
-            var result = await _service.GetActivityBreakdownByDays("user_id", start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetActivityBreakdownByDays("user_id", start, end).ConfigureAwait(false);
 
             Assert.AreEqual(9, result.Count);
-            _workItemService.Verify(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()), Times.Exactly(9));
-            _focusSessionService.Verify(_ => _.GetOverlearningHoursByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()), Times.Exactly(9));
+            WorkItemService.Verify(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()), Times.Exactly(9));
+            FocusSessionService.Verify(_ => _.GetOverlearningHoursByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()), Times.Exactly(9));
         }
 
         [Test]
@@ -100,10 +100,10 @@ namespace Services.Test.UnitTests.Services
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 10);
             var breakdown = new ActivityBreakdownDto { Regular = 4, Recurring = 3, Interruption = 2 };
-            _workItemService.Setup(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(breakdown);
-            _focusSessionService.Setup(_ => _.GetOverlearningHoursByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(1);
+            WorkItemService.Setup(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(breakdown);
+            FocusSessionService.Setup(_ => _.GetOverlearningHoursByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(1);
 
-            var result = await _service.GetActivityBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetActivityBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.AreEqual(4, result.Regular);
             Assert.AreEqual(3, result.Recurring);
@@ -135,11 +135,11 @@ namespace Services.Test.UnitTests.Services
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 10);
 
-            _workItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+            WorkItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
                 .Returns(Task.FromResult(current))
                 .Returns(Task.FromResult(overall));
 
-            var result = await _service.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.AreEqual(2, result.Normal);
             Assert.AreEqual(1, result.Underestimate);
@@ -171,11 +171,11 @@ namespace Services.Test.UnitTests.Services
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 10);
 
-            _workItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+            WorkItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
                 .Returns(Task.FromResult(current))
                 .Returns(Task.FromResult(overall));
 
-            var result = await _service.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.AreEqual(1, result.Normal);
             Assert.AreEqual(0, result.Underestimate);
@@ -207,11 +207,11 @@ namespace Services.Test.UnitTests.Services
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 10);
 
-            _workItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+            WorkItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
                 .Returns(Task.FromResult(current))
                 .Returns(Task.FromResult(overall));
 
-            var result = await _service.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.AreEqual(1, result.Normal);
             Assert.AreEqual(0, result.Underestimate);
@@ -243,11 +243,11 @@ namespace Services.Test.UnitTests.Services
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 10);
 
-            _workItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+            WorkItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
                 .Returns(Task.FromResult(current))
                 .Returns(Task.FromResult(overall));
 
-            var result = await _service.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.AreEqual(1, result.Normal);
             Assert.AreEqual(0, result.Underestimate);
@@ -298,11 +298,11 @@ namespace Services.Test.UnitTests.Services
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 10);
 
-            _workItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+            WorkItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
                 .Returns(Task.FromResult(current))
                 .Returns(Task.FromResult(overall));
 
-            var result = await _service.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.AreEqual(4, result.Normal);
             Assert.AreEqual(1, result.Underestimate);
@@ -314,10 +314,10 @@ namespace Services.Test.UnitTests.Services
         {
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 10);
-            _workItemRepository.Setup(_ => _.GetPastDueWorkItemsCount(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(3);
-            _workItemRepository.Setup(_ => _.GetLoomingWorkItemsCount(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(2);
+            WorkItemRepository.Setup(_ => _.GetPastDueWorkItemsCount(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(3);
+            WorkItemRepository.Setup(_ => _.GetLoomingWorkItemsCount(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(2);
 
-            var result = await _service.GetDueDateBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetDueDateBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.AreEqual(3, result.PastDue);
             Assert.AreEqual(2, result.Looming);

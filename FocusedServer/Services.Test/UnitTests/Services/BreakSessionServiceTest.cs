@@ -12,14 +12,14 @@ namespace Services.Test.UnitTests.Services
     [TestFixture]
     public class BreakSessionServiceTest
     {
-        private Mock<IBreakSessionRepository> _breakSessionRepository;
-        private BreakSessionService _service;
+        private Mock<IBreakSessionRepository> BreakSessionRepository { get; set; }
+        private BreakSessionService SubjectUnderTest { get; set; }
 
         [SetUp]
         public void Setup()
         {
-            _breakSessionRepository = new Mock<IBreakSessionRepository>();
-            _service = new BreakSessionService(_breakSessionRepository.Object);
+            BreakSessionRepository = new Mock<IBreakSessionRepository>();
+            SubjectUnderTest = new BreakSessionService(BreakSessionRepository.Object);
         }
 
         [Test]
@@ -36,9 +36,9 @@ namespace Services.Test.UnitTests.Services
 
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 3);
-            _breakSessionRepository.Setup(_ => _.GetBreakSessionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(sessions);
+            BreakSessionRepository.Setup(_ => _.GetBreakSessionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(sessions);
 
-            var result = await _service.GetBreakDurationByDateRange("user_id", start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetBreakDurationByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.AreEqual(2, result);
         }
