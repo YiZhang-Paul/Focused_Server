@@ -12,14 +12,16 @@ namespace Services.Test.UnitTests.Services
     [TestFixture]
     public class BreakSessionServiceTest
     {
+        private Mock<IFocusSessionRepository> FocusSessionRepository { get; set; }
         private Mock<IBreakSessionRepository> BreakSessionRepository { get; set; }
         private BreakSessionService SubjectUnderTest { get; set; }
 
         [SetUp]
         public void Setup()
         {
+            FocusSessionRepository = new Mock<IFocusSessionRepository>();
             BreakSessionRepository = new Mock<IBreakSessionRepository>();
-            SubjectUnderTest = new BreakSessionService(BreakSessionRepository.Object);
+            SubjectUnderTest = new BreakSessionService(FocusSessionRepository.Object, BreakSessionRepository.Object);
         }
 
         [Test]
