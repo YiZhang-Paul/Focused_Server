@@ -62,5 +62,12 @@ namespace WebApi.Controllers
         {
             return await BreakSessionService.StartBreakSession(UserId, option).ConfigureAwait(false);
         }
+
+        [HttpPost]
+        [Route("break-session/{id}/stop")]
+        public async Task<bool> StopBreakSession(string id)
+        {
+            return await BreakSessionService.StopBreakSession(UserId, id).ConfigureAwait(false);
+        }
     }
 }

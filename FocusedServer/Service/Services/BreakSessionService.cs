@@ -49,5 +49,19 @@ namespace Service.Services
 
             return !string.IsNullOrWhiteSpace(id);
         }
+
+        public async Task<bool> StopBreakSession(string userId, string id)
+        {
+            var session = await BreakSessionRepository.Get(userId, id).ConfigureAwait(false);
+
+            if (session == null)
+            {
+                return false;
+            }
+
+            session.EndTime = DateTime.Now;
+
+            return await BreakSessionRepository.Replace(session).ConfigureAwait(false) != null;
+        }
     }
 }
