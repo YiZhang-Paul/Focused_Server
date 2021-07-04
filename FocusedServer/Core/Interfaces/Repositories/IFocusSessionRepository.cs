@@ -7,5 +7,6 @@ namespace Core.Interfaces.Repositories
     public interface IFocusSessionRepository : ITimeRangeRecordRepository<FocusSession>
     {
         Task<FocusSession> GetUnfinishedFocusSession(string userId);
+        Task<FocusSession> GetStaleFocusSession(string userId);
     }
 }

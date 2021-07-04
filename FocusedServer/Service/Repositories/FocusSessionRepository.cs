@@ -19,5 +19,12 @@ namespace Service.Repositories
 
             return sessions.LastOrDefault(_ => _.StartTime.AddHours(_.TargetDuration) > DateTime.Now);
         }
+
+        public async Task<FocusSession> GetStaleFocusSession(string userId)
+        {
+            var sessions = await GetOpenTimeRange(userId).ConfigureAwait(false);
+
+            return sessions.LastOrDefault(_ => _.StartTime.AddHours(_.TargetDuration) <= DateTime.Now);
+        }
     }
 }
