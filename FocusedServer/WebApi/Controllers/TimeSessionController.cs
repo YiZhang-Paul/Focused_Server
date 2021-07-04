@@ -43,10 +43,10 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("focus-session/stop")]
-        public async Task<bool> StopFocusSession()
+        [Route("focus-session/{id}/stop")]
+        public async Task<bool> StopFocusSession(string id)
         {
-            return await FocusSessionService.StopFocusSession(UserId).ConfigureAwait(false);
+            return await FocusSessionService.StopFocusSession(UserId, id).ConfigureAwait(false);
         }
 
         [HttpGet]

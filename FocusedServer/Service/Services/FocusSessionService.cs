@@ -80,13 +80,13 @@ namespace Service.Services
             return await WorkItemService.StartWorkItem(userId, option.StartingItem.Id).ConfigureAwait(false);
         }
 
-        public async Task<bool> StopFocusSession(string userId)
+        public async Task<bool> StopFocusSession(string userId, string id)
         {
-            var session = await FocusSessionRepository.GetActiveFocusSession(userId).ConfigureAwait(false);
+            var session = await FocusSessionRepository.Get(userId, id).ConfigureAwait(false);
 
             if (session == null)
             {
-                return true;
+                return false;
             }
 
             session.EndTime = DateTime.Now;
