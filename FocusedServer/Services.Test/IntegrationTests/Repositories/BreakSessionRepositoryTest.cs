@@ -30,7 +30,7 @@ namespace Services.Test.IntegrationTests.Repositories
 
             await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            Assert.IsNull(await SubjectUnderTest.GetActiveBreakSession("user_id").ConfigureAwait(false));
+            Assert.IsNull(await SubjectUnderTest.GetUnfinishedBreakSession("user_id").ConfigureAwait(false));
         }
 
         [Test]
@@ -43,7 +43,7 @@ namespace Services.Test.IntegrationTests.Repositories
 
             await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            Assert.IsNull(await SubjectUnderTest.GetActiveBreakSession("user_id").ConfigureAwait(false));
+            Assert.IsNull(await SubjectUnderTest.GetUnfinishedBreakSession("user_id").ConfigureAwait(false));
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace Services.Test.IntegrationTests.Repositories
 
             await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            var result = await SubjectUnderTest.GetActiveBreakSession("user_id").ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetUnfinishedBreakSession("user_id").ConfigureAwait(false);
 
             Assert.AreEqual(sessions[0].Id, result.Id);
         }

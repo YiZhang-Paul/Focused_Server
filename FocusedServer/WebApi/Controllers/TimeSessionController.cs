@@ -46,7 +46,7 @@ namespace WebApi.Controllers
         [Route("focus-session/start")]
         public async Task<bool> StartFocusSession([FromBody]FocusSessionStartupOption option)
         {
-            var session = await BreakSessionRepository.GetActiveBreakSession(UserId).ConfigureAwait(false);
+            var session = await BreakSessionRepository.GetUnfinishedBreakSession(UserId).ConfigureAwait(false);
 
             if (session != null && !await BreakSessionService.StopBreakSession(UserId, session.Id).ConfigureAwait(false))
             {
@@ -67,7 +67,14 @@ namespace WebApi.Controllers
         [Route("active-break-session")]
         public async Task<BreakSession> GetActiveBreakSession()
         {
-            return await BreakSessionRepository.GetActiveBreakSession(UserId).ConfigureAwait(false);
+            return await BreakSessionService.GetOpenBreakSession(UserId, false).ConfigureAwait(false);
+        }
+
+        [HttpGet]
+        [Route("stale-break-session")]
+        public async Task<BreakSession> GetStaleBreakSession()
+        {
+            return await BreakSessionService.GetOpenBreakSession(UserId, true).ConfigureAwait(false);
         }
 
         [HttpPost]

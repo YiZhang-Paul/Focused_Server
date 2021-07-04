@@ -18,6 +18,16 @@ namespace Service.Services
             BreakSessionRepository = breakSessionRepository;
         }
 
+        public async Task<BreakSession> GetOpenBreakSession(string userId, bool isStale)
+        {
+            if (isStale)
+            {
+                return await BreakSessionRepository.GetUnfinishedBreakSession(userId).ConfigureAwait(false);
+            }
+
+            return await BreakSessionRepository.GetStaleBreakSession(userId).ConfigureAwait(false);
+        }
+
         public async Task<double> GetBreakDurationByDateRange(string userId, DateTime start, DateTime end)
         {
             var sessions = await BreakSessionRepository.GetBreakSessionByDateRange(userId, start, end).ConfigureAwait(false);
@@ -34,7 +44,7 @@ namespace Service.Services
 
             var focusSession = await FocusSessionRepository.Get(userId, option.FocusSessionId).ConfigureAwait(false);
 
-            if (focusSession?.EndTime == null || await BreakSessionRepository.GetActiveBreakSession(userId).ConfigureAwait(false) != null)
+            if (focusSession?.EndTime == null || await BreakSessionRepository.GetUnfinishedBreakSession(userId).ConfigureAwait(false) != null)
             {
                 return false;
             }
