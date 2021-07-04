@@ -32,54 +32,12 @@ namespace Service.Services
 
         public async Task<FocusSessionDto> GetActiveFocusSessionMeta(string userId)
         {
-            var session = await FocusSessionRepository.GetUnfinishedFocusSession(userId).ConfigureAwait(false);
-
-            if (session == null)
-            {
-                return null;
-            }
-
-            var end = DateTime.Now;
-            var ids = await TimeSeriesRepository.GetDataSourceIdsByDateRange(userId, session.StartTime, end, TimeSeriesType.WorkItem).ConfigureAwait(false);
-            var progress = await WorkItemService.GetWorkItemActivityBreakdownByDateRange(userId, session.StartTime, end).ConfigureAwait(false);
-            progress.Overlearning = await GetOverlearningHoursByDateRange(userId, session.StartTime, end).ConfigureAwait(false);
-
-            return new FocusSessionDto
-            {
-                Id = session.Id,
-                UserId = session.UserId,
-                StartTime = session.StartTime,
-                EndTime = session.EndTime,
-                TargetDuration = session.TargetDuration,
-                Activities = progress,
-                WorkItems = await WorkItemRepository.GetWorkItemMetas(userId, ids).ConfigureAwait(false)
-            };
+            return await GetOpenFocusSessionMeta(userId, false).ConfigureAwait(false);
         }
 
         public async Task<FocusSessionDto> GetStaleFocusSessionMeta(string userId)
         {
-            var session = await FocusSessionRepository.GetStaleFocusSession(userId).ConfigureAwait(false);
-
-            if (session == null)
-            {
-                return null;
-            }
-
-            var end = session.StartTime.AddHours(session.TargetDuration);
-            var ids = await TimeSeriesRepository.GetDataSourceIdsByDateRange(userId, session.StartTime, end, TimeSeriesType.WorkItem).ConfigureAwait(false);
-            var progress = await WorkItemService.GetWorkItemActivityBreakdownByDateRange(userId, session.StartTime, end).ConfigureAwait(false);
-            progress.Overlearning = await GetOverlearningHoursByDateRange(userId, session.StartTime, end).ConfigureAwait(false);
-
-            return new FocusSessionDto
-            {
-                Id = session.Id,
-                UserId = session.UserId,
-                StartTime = session.StartTime,
-                EndTime = session.EndTime,
-                TargetDuration = session.TargetDuration,
-                Activities = progress,
-                WorkItems = await WorkItemRepository.GetWorkItemMetas(userId, ids).ConfigureAwait(false)
-            };
+            return await GetOpenFocusSessionMeta(userId, true).ConfigureAwait(false);
         }
 
         public async Task<bool> StartFocusSession(string userId, FocusSessionStartupOption option)
@@ -130,6 +88,34 @@ namespace Service.Services
             var series = await TimeSeriesRepository.GetTimeSeriesByDateRange(userId, start, end, TimeSeriesType.Session);
 
             return TimeSeriesUtility.GetTotalTime(series, start, end);
+        }
+
+        private async Task<FocusSessionDto> GetOpenFocusSessionMeta(string userId, bool isStale)
+        {
+            var session = isStale ?
+                await FocusSessionRepository.GetStaleFocusSession(userId).ConfigureAwait(false) :
+                await FocusSessionRepository.GetUnfinishedFocusSession(userId).ConfigureAwait(false);
+
+            if (session == null)
+            {
+                return null;
+            }
+
+            var end = isStale ? session.StartTime.AddHours(session.TargetDuration) : DateTime.Now;
+            var ids = await TimeSeriesRepository.GetDataSourceIdsByDateRange(userId, session.StartTime, end, TimeSeriesType.WorkItem).ConfigureAwait(false);
+            var progress = await WorkItemService.GetWorkItemActivityBreakdownByDateRange(userId, session.StartTime, end).ConfigureAwait(false);
+            progress.Overlearning = await GetOverlearningHoursByDateRange(userId, session.StartTime, end).ConfigureAwait(false);
+
+            return new FocusSessionDto
+            {
+                Id = session.Id,
+                UserId = session.UserId,
+                StartTime = session.StartTime,
+                EndTime = session.EndTime,
+                TargetDuration = session.TargetDuration,
+                Activities = progress,
+                WorkItems = await WorkItemRepository.GetWorkItemMetas(userId, ids).ConfigureAwait(false)
+            };
         }
     }
 }
