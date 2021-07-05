@@ -71,7 +71,7 @@ namespace Services.Test.UnitTests.Services
             Assert.AreEqual(2, result.Activities.Recurring);
             Assert.AreEqual(3, result.Activities.Interruption);
             Assert.AreEqual(2, result.Activities.Overlearning);
-            WorkItemRepository.Verify(_ => _.GetWorkItemMetas(It.IsAny<string>(), It.IsAny<List<string>>()), Times.Once);
+            WorkItemRepository.Verify(_ => _.GetWorkItemMetas(It.IsAny<string>(), It.IsAny<List<string>>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()), Times.Once);
         }
 
         [Test]

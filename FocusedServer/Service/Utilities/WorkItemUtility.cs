@@ -9,8 +9,11 @@ namespace Service.Utilities
 {
     public static class WorkItemUtility
     {
-        public static WorkItemDto ToWorkItemDto(WorkItemWithTimeSeries item)
+        public static WorkItemDto ToWorkItemDto(WorkItemWithTimeSeries item, DateTime? start = null, DateTime? end = null)
         {
+            var startTime = start ?? item.TimeInfo.Created;
+            var endTime = end ?? DateTime.Now;
+
             return new WorkItemDto
             {
                 Id = item.Id,
@@ -23,7 +26,7 @@ namespace Service.Utilities
                 DueDate = item.DueDate,
                 ItemProgress = new ProgressionCounter<double>
                 {
-                    Current = TimeSeriesUtility.GetTotalTime(item.TimeSeries, item.TimeInfo.Created, DateTime.Now),
+                    Current = TimeSeriesUtility.GetTotalTime(item.TimeSeries, startTime, endTime),
                     Target = item.EstimatedHours,
                     IsCompleted = item.Status == WorkItemStatus.Completed
                 },

@@ -38,13 +38,13 @@ namespace Service.Repositories
             return item == null ? null : WorkItemUtility.ToWorkItemDto(item);
         }
 
-        public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, List<string> ids)
+        public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, List<string> ids, DateTime? start = null, DateTime? end = null)
         {
             var builder = Builders<WorkItem>.Filter;
             var filter = builder.Eq(_ => _.UserId, userId) & builder.In(_ => _.Id, ids);
             var items = await GetWorkItemWithTimeSeriesAggregate(filter).ToListAsync().ConfigureAwait(false);
 
-            return items.Select(WorkItemUtility.ToWorkItemDto).ToList();
+            return items.Select(_ => WorkItemUtility.ToWorkItemDto(_, start, end)).ToList();
         }
 
         public async Task<List<WorkItemDto>> GetWorkItemMetas(string userId, WorkItemQuery query)
@@ -52,7 +52,7 @@ namespace Service.Repositories
             var filter = GetFilter(userId, query);
             var items = await GetWorkItemWithTimeSeriesAggregate(filter, query.Skip, query.Limit).ToListAsync().ConfigureAwait(false);
 
-            return items.Select(WorkItemUtility.ToWorkItemDto).ToList();
+            return items.Select(_ => WorkItemUtility.ToWorkItemDto(_)).ToList();
         }
 
         public async Task<long> GetPastDueWorkItemsCount(string userId, DateTime start, DateTime end)

@@ -12,7 +12,7 @@ namespace Core.Interfaces.Repositories
     {
         Task<List<WorkItem>> GetWorkItems(string userId, WorkItemStatus status);
         Task<WorkItemDto> GetWorkItemMeta(string userId, string id);
-        Task<List<WorkItemDto>> GetWorkItemMetas(string userId, List<string> ids);
+        Task<List<WorkItemDto>> GetWorkItemMetas(string userId, List<string> ids, DateTime? start = null, DateTime? end = null);
         Task<List<WorkItemDto>> GetWorkItemMetas(string userId, WorkItemQuery query);
         Task<long> GetPastDueWorkItemsCount(string userId, DateTime start, DateTime end);
         Task<long> GetLoomingWorkItemsCount(string userId, DateTime start, DateTime end);
