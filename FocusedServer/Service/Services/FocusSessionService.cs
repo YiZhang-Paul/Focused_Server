@@ -114,7 +114,7 @@ namespace Service.Services
                 EndTime = session.EndTime,
                 TargetDuration = session.TargetDuration,
                 Activities = progress,
-                WorkItems = await WorkItemRepository.GetWorkItemMetas(userId, ids).ConfigureAwait(false)
+                WorkItems = await WorkItemRepository.GetWorkItemMetas(userId, ids, session.StartTime, end).ConfigureAwait(false)
             };
         }
     }
