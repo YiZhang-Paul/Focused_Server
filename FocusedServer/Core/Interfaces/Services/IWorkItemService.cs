@@ -1,4 +1,5 @@
 using Core.Dtos;
+using Core.Enums;
 using Core.Models.WorkItem;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace Core.Interfaces.Services
         Task<WorkItem> GetWorkItem(string userId, string id);
         Task<WorkItem> UpdateWorkItem(WorkItem item);
         Task<bool> StartWorkItem(string userId, string id);
-        Task<bool> StopWorkItem(string userId);
+        Task<bool> StopWorkItem(string userId, WorkItemStatus targetStatus = WorkItemStatus.Highlighted);
         Task<WorkItemDto> UpdateWorkItemMeta(WorkItemDto item);
         Task<ActivityBreakdownDto> GetWorkItemActivityBreakdownByDateRange(string userId, DateTime start, DateTime end);
         Task<List<WorkItemProgressionDto>> GetWorkItemProgressionByDateRange(string userId, DateTime start, DateTime end);

@@ -90,7 +90,7 @@ namespace Service.Services
             return !string.IsNullOrWhiteSpace(seriesId) && await UpdateWorkItem(item).ConfigureAwait(false) != null;
         }
 
-        public async Task<bool> StopWorkItem(string userId)
+        public async Task<bool> StopWorkItem(string userId, WorkItemStatus targetStatus = WorkItemStatus.Highlighted)
         {
             var items = await WorkItemRepository.GetWorkItems(userId, WorkItemStatus.Ongoing).ConfigureAwait(false);
 
@@ -108,7 +108,7 @@ namespace Service.Services
             }
 
             series.EndTime = DateTime.UtcNow;
-            item.Status = WorkItemStatus.Highlighted;
+            item.Status = targetStatus;
 
             return await TimeSeriesRepository.Replace(series).ConfigureAwait(false) != null && await UpdateWorkItem(item).ConfigureAwait(false) != null;
         }
