@@ -59,9 +59,9 @@ namespace Services.Test.UnitTests.Utilities
         public void GetTotalTimeShouldIncludeOverlappingTime()
         {
             var start = new DateTime(2021, 1, 5, 10, 15, 0);
-            var end = new DateTime(2021, 1, 7, 12, 30, 0);
+            var end = new DateTime(2021, 1, 7, 12, 50, 0);
 
-            Assert.AreEqual(3.75, TimeSeriesUtility.GetTotalTime(Series, start, end));
+            Assert.AreEqual(4, TimeSeriesUtility.GetTotalTime(Series, start, end));
         }
 
         [Test]
@@ -70,6 +70,16 @@ namespace Services.Test.UnitTests.Utilities
             Series.Last().EndTime = null;
             var start = DateTime.Now.AddHours(-3);
             var end = DateTime.Now;
+
+            Assert.AreEqual(3, Math.Round(TimeSeriesUtility.GetTotalTime(Series, start, end), 2));
+        }
+
+        [Test]
+        public void GetTotalTimeShouldExcludeTimeInFuture()
+        {
+            Series.Last().EndTime = null;
+            var start = DateTime.Now.AddHours(-3);
+            var end = DateTime.Now.AddHours(1);
 
             Assert.AreEqual(3, Math.Round(TimeSeriesUtility.GetTotalTime(Series, start, end), 2));
         }

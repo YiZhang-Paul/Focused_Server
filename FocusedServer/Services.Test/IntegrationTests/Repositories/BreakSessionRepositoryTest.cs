@@ -21,7 +21,7 @@ namespace Services.Test.IntegrationTests.Repositories
         }
 
         [Test]
-        public async Task GetActiveBreakSessionShouldReturnNullWhenNoActiveBreakSessionExist()
+        public async Task GetUnfinishedBreakSessionShouldReturnNullWhenNoUnfinishedBreakSessionExist()
         {
             var sessions = new List<BreakSession>
             {
@@ -34,7 +34,7 @@ namespace Services.Test.IntegrationTests.Repositories
         }
 
         [Test]
-        public async Task GetActiveBreakSessionShouldReturnNullWhenActiveBreakSessionAlreadyEnded()
+        public async Task GetUnfinishedBreakSessionShouldReturnNullWhenUnfinishedBreakSessionAlreadyEnded()
         {
             var sessions = new List<BreakSession>
             {
@@ -47,7 +47,7 @@ namespace Services.Test.IntegrationTests.Repositories
         }
 
         [Test]
-        public async Task GetActiveBreakSessionShouldReturnActiveBreakSessionFound()
+        public async Task GetUnfinishedBreakSessionShouldReturnUnfinishedBreakSessionFound()
         {
             var sessions = new List<BreakSession>
             {
@@ -57,6 +57,47 @@ namespace Services.Test.IntegrationTests.Repositories
             await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
             var result = await SubjectUnderTest.GetUnfinishedBreakSession("user_id").ConfigureAwait(false);
+
+            Assert.AreEqual(sessions[0].Id, result.Id);
+        }
+
+        [Test]
+        public async Task GetStaleBreakSessionShouldReturnNullWhenNoStaleBreakSessionExist()
+        {
+            var sessions = new List<BreakSession>
+            {
+                new BreakSession { UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), EndTime = DateTime.Now.AddHours(-1) }
+            };
+
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
+
+            Assert.IsNull(await SubjectUnderTest.GetStaleBreakSession("user_id").ConfigureAwait(false));
+        }
+
+        [Test]
+        public async Task GetStaleBreakSessionShouldReturnNullWhenOpenBreakSessionIsNotEndedYet()
+        {
+            var sessions = new List<BreakSession>
+            {
+                new BreakSession { UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), TargetDuration = 2.5 }
+            };
+
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
+
+            Assert.IsNull(await SubjectUnderTest.GetStaleBreakSession("user_id").ConfigureAwait(false));
+        }
+
+        [Test]
+        public async Task GetStaleBreakSessionShouldReturnStaleBreakSessionFound()
+        {
+            var sessions = new List<BreakSession>
+            {
+                new BreakSession { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), TargetDuration = 2 }
+            };
+
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
+
+            var result = await SubjectUnderTest.GetStaleBreakSession("user_id").ConfigureAwait(false);
 
             Assert.AreEqual(sessions[0].Id, result.Id);
         }

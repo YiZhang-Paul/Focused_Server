@@ -96,5 +96,33 @@ namespace Services.Test.UnitTests.Utilities
             Assert.AreEqual(3, result.ChecklistProgress.Target);
             Assert.IsTrue(result.ChecklistProgress.IsCompleted);
         }
+
+        [Test]
+        public void ToWorkItemDtoShouldReturnProgressionWithinTimeRange()
+        {
+            var item = new WorkItemWithTimeSeries
+            {
+                Status = WorkItemStatus.Completed,
+                EstimatedHours = 5,
+                TimeInfo = new TimeInfo { Created = new DateTime(2021, 1, 1) },
+                TimeSeries = new List<TimeSeries>
+                {
+                    new TimeSeries
+                    {
+                        StartTime = new DateTime(2021, 1, 25, 5, 15, 0),
+                        EndTime = new DateTime(2021, 1, 25, 12, 15, 0)
+                    }
+                }
+            };
+
+            var start = new DateTime(2021, 1, 25, 7, 15, 0);
+            var end = new DateTime(2021, 1, 25, 10, 15, 0);
+
+            var result = WorkItemUtility.ToWorkItemDto(item, start, end);
+
+            Assert.AreEqual(3, result.ItemProgress.Current);
+            Assert.AreEqual(5, result.ItemProgress.Target);
+            Assert.IsTrue(result.ItemProgress.IsCompleted);
+        }
     }
 }

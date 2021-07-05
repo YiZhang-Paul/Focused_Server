@@ -79,7 +79,7 @@ namespace Service.Services
 
         public async Task<ActivityBreakdownDto> GetActivityBreakdownByDateRange(string userId, DateTime? start, DateTime? end)
         {
-            var endDate = end ?? DateTime.UtcNow;
+            var endDate = end ?? DateTime.Now;
             var startDate = start ?? endDate.AddDays(-DefaultPeriod);
             var progress = await WorkItemService.GetWorkItemActivityBreakdownByDateRange(userId, startDate, endDate).ConfigureAwait(false);
             progress.Overlearning = await FocusSessionService.GetOverlearningHoursByDateRange(userId, startDate, endDate).ConfigureAwait(false);
@@ -89,7 +89,7 @@ namespace Service.Services
 
         public async Task<EstimationBreakdownDto> GetEstimationBreakdownByDateRange(string userId, DateTime? start, DateTime? end)
         {
-            var endDate = end ?? DateTime.UtcNow;
+            var endDate = end ?? DateTime.Now;
             var startDate = start ?? endDate.AddDays(-DefaultPeriod);
             var currentProgresses = await WorkItemService.GetWorkItemProgressionByDateRange(userId, startDate, endDate).ConfigureAwait(false);
             var overallProgresses = await WorkItemService.GetWorkItemProgressionByDateRange(userId, new DateTime(1970, 1, 1), endDate).ConfigureAwait(false);

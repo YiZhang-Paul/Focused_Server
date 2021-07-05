@@ -112,6 +112,30 @@ namespace Services.Test.UnitTests.Services
         }
 
         [Test]
+        public async Task GetActivityBreakdownByDateRangeShouldDefaultToPastTwoWeeks()
+        {
+            var breakdown = new ActivityBreakdownDto { Regular = 4, Recurring = 3, Interruption = 2 };
+            WorkItemService.Setup(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(breakdown);
+            FocusSessionService.Setup(_ => _.GetOverlearningHoursByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(1);
+
+            await SubjectUnderTest.GetActivityBreakdownByDateRange("user_id", null, null).ConfigureAwait(false);
+
+            WorkItemService.Verify(_ => _.GetWorkItemActivityBreakdownByDateRange
+            (
+                It.IsAny<string>(),
+                It.Is<DateTime>(date => (DateTime.Now.AddDays(-14) - date).TotalSeconds < 3),
+                It.Is<DateTime>(date => (DateTime.Now - date).TotalSeconds < 3)
+            ), Times.Once);
+
+            FocusSessionService.Verify(_ => _.GetOverlearningHoursByDateRange
+            (
+                It.IsAny<string>(),
+                It.Is<DateTime>(date => (DateTime.Now.AddDays(-14) - date).TotalSeconds < 3),
+                It.Is<DateTime>(date => (DateTime.Now - date).TotalSeconds < 3)
+            ), Times.Once);
+        }
+
+        [Test]
         public async Task GetEstimationBreakdownByDateRangeShouldProperlyCountUnderestimatedTime()
         {
             var current = new List<WorkItemProgressionDto>
@@ -219,6 +243,42 @@ namespace Services.Test.UnitTests.Services
         }
 
         [Test]
+        public async Task GetEstimationBreakdownByDateRangeShouldNotCountOverestimatedTimeWhenEstimationIsLessThanThirtyMinutes()
+        {
+            var current = new List<WorkItemProgressionDto>
+            {
+                new WorkItemProgressionDto
+                {
+                    Id = "id_1",
+                    Progress = new ProgressionCounter<double> { Current = 0.3, Target = 0.4 }
+                }
+            };
+
+            var overall = new List<WorkItemProgressionDto>
+            {
+                new WorkItemProgressionDto
+                {
+                    Id = "id_1",
+                    // total overestimation reaches 60%, but original estimation is less than 30 minutes
+                    Progress = new ProgressionCounter<double> { Current = 0.3, Target = 0.4, IsCompleted = true }
+                }
+            };
+
+            var start = new DateTime(2021, 1, 1);
+            var end = new DateTime(2021, 1, 10);
+
+            WorkItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+                .Returns(Task.FromResult(current))
+                .Returns(Task.FromResult(overall));
+
+            var result = await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
+
+            Assert.AreEqual(0.3, result.Normal);
+            Assert.AreEqual(0, result.Underestimate);
+            Assert.AreEqual(0, result.Overestimate);
+        }
+
+        [Test]
         public async Task GetEstimationBreakdownByDateRangeShouldNotCountOverestimatedTimeWhenItemIsUnfinished()
         {
             var current = new List<WorkItemProgressionDto>
@@ -310,6 +370,21 @@ namespace Services.Test.UnitTests.Services
         }
 
         [Test]
+        public async Task GetEstimationBreakdownByDateRangeShouldDefaultToPastTwoWeeks()
+        {
+            WorkItemService.Setup(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<WorkItemProgressionDto>());
+
+            await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", null, null).ConfigureAwait(false);
+
+            WorkItemService.Verify(_ => _.GetWorkItemProgressionByDateRange
+            (
+                It.IsAny<string>(),
+                It.Is<DateTime>(date => (DateTime.Now.AddDays(-14) - date).TotalSeconds < 3),
+                It.Is<DateTime>(date => (DateTime.Now - date).TotalSeconds < 3)
+            ), Times.Once);
+        }
+
+        [Test]
         public async Task GetDueDateBreakdownByDateRangeShouldReturnDueDateBreakdown()
         {
             var start = new DateTime(2021, 1, 1);
@@ -321,6 +396,29 @@ namespace Services.Test.UnitTests.Services
 
             Assert.AreEqual(3, result.PastDue);
             Assert.AreEqual(2, result.Looming);
+        }
+
+        [Test]
+        public async Task GetDueDateBreakdownByDateRangeShouldDefaultToPastTwoWeeks()
+        {
+            WorkItemRepository.Setup(_ => _.GetPastDueWorkItemsCount(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(3);
+            WorkItemRepository.Setup(_ => _.GetLoomingWorkItemsCount(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(2);
+
+            await SubjectUnderTest.GetDueDateBreakdownByDateRange("user_id", null, null).ConfigureAwait(false);
+
+            WorkItemRepository.Verify(_ => _.GetPastDueWorkItemsCount
+            (
+                It.IsAny<string>(),
+                It.Is<DateTime>(date => (DateTime.Now.AddDays(-14) - date).TotalSeconds < 3),
+                It.Is<DateTime>(date => (DateTime.Now - date).TotalSeconds < 3)
+            ), Times.Once);
+
+            WorkItemRepository.Verify(_ => _.GetLoomingWorkItemsCount
+            (
+                It.IsAny<string>(),
+                It.Is<DateTime>(date => (DateTime.Now.AddDays(-14) - date).TotalSeconds < 3),
+                It.Is<DateTime>(date => (DateTime.Now.AddDays(1) - date).TotalSeconds < 3)
+            ), Times.Once);
         }
     }
 }
