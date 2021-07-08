@@ -72,7 +72,7 @@ namespace Services.Test.UnitTests.Services
 
             await SubjectUnderTest.UpdateWorkItem(item).ConfigureAwait(false);
 
-            Assert.AreEqual(DateTime.UtcNow.ToLongDateString(), item.TimeInfo.LastModified.ToLongDateString());
+            Assert.AreEqual(DateTime.Now.ToLongDateString(), item.TimeInfo.LastModified.ToLongDateString());
         }
 
         [Test]

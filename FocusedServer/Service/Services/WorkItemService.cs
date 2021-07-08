@@ -56,7 +56,7 @@ namespace Service.Services
 
         public async Task<WorkItem> UpdateWorkItem(WorkItem item)
         {
-            item.TimeInfo.LastModified = DateTime.UtcNow;
+            item.TimeInfo.LastModified = DateTime.Now;
 
             return await WorkItemRepository.Replace(item).ConfigureAwait(false);
         }
@@ -79,7 +79,7 @@ namespace Service.Services
             var series = new TimeSeries
             {
                 UserId = userId,
-                StartTime = DateTime.UtcNow,
+                StartTime = DateTime.Now,
                 Type = TimeSeriesType.WorkItem,
                 DataSourceId = item.Id
             };
@@ -107,7 +107,7 @@ namespace Service.Services
                 return false;
             }
 
-            series.EndTime = DateTime.UtcNow;
+            series.EndTime = DateTime.Now;
             item.Status = targetStatus;
 
             return await TimeSeriesRepository.Replace(series).ConfigureAwait(false) != null && await UpdateWorkItem(item).ConfigureAwait(false) != null;

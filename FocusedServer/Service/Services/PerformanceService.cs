@@ -122,7 +122,7 @@ namespace Service.Services
 
         public async Task<DueDateBreakdownDto> GetDueDateBreakdownByDateRange(string userId, DateTime? start, DateTime? end)
         {
-            var endDate = end ?? DateTime.UtcNow;
+            var endDate = end ?? DateTime.Now;
             var startDate = start ?? endDate.AddDays(-DefaultPeriod);
 
             return new DueDateBreakdownDto
