@@ -171,43 +171,7 @@ namespace Services.Test.UnitTests.Services
         }
 
         [Test]
-        public async Task GetEstimationBreakdownByDateRangeShouldProperlyCountOverestimatedTimeWhenOverestimationExceedsThreeHours()
-        {
-            var current = new List<WorkItemProgressionDto>
-            {
-                new WorkItemProgressionDto
-                {
-                    Id = "id_1",
-                    Progress = new ProgressionCounter<double> { Current = 1, Target = 5 }
-                }
-            };
-
-            var overall = new List<WorkItemProgressionDto>
-            {
-                new WorkItemProgressionDto
-                {
-                    Id = "id_1",
-                    // total overestimation exceeds 3 hours
-                    Progress = new ProgressionCounter<double> { Current = 1.5, Target = 5, IsCompleted = true }
-                }
-            };
-
-            var start = new DateTime(2021, 1, 1);
-            var end = new DateTime(2021, 1, 10);
-
-            WorkItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
-                .Returns(Task.FromResult(current))
-                .Returns(Task.FromResult(overall));
-
-            var result = await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
-
-            Assert.AreEqual(1, result.Normal);
-            Assert.AreEqual(0, result.Underestimate);
-            Assert.AreEqual(3.5, result.Overestimate);
-        }
-
-        [Test]
-        public async Task GetEstimationBreakdownByDateRangeShouldProperlyCountOverestimatedTimeWhenOverestimationReachesSixtyPercent()
+        public async Task GetEstimationBreakdownByDateRangeShouldProperlyCountOverestimatedTimeWhenApplicable()
         {
             var current = new List<WorkItemProgressionDto>
             {
@@ -243,43 +207,7 @@ namespace Services.Test.UnitTests.Services
         }
 
         [Test]
-        public async Task GetEstimationBreakdownByDateRangeShouldNotCountOverestimatedTimeWhenEstimationIsLessThanThirtyMinutes()
-        {
-            var current = new List<WorkItemProgressionDto>
-            {
-                new WorkItemProgressionDto
-                {
-                    Id = "id_1",
-                    Progress = new ProgressionCounter<double> { Current = 0.3, Target = 0.4 }
-                }
-            };
-
-            var overall = new List<WorkItemProgressionDto>
-            {
-                new WorkItemProgressionDto
-                {
-                    Id = "id_1",
-                    // total overestimation reaches 60%, but original estimation is less than 30 minutes
-                    Progress = new ProgressionCounter<double> { Current = 0.3, Target = 0.4, IsCompleted = true }
-                }
-            };
-
-            var start = new DateTime(2021, 1, 1);
-            var end = new DateTime(2021, 1, 10);
-
-            WorkItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
-                .Returns(Task.FromResult(current))
-                .Returns(Task.FromResult(overall));
-
-            var result = await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
-
-            Assert.AreEqual(0.3, result.Normal);
-            Assert.AreEqual(0, result.Underestimate);
-            Assert.AreEqual(0, result.Overestimate);
-        }
-
-        [Test]
-        public async Task GetEstimationBreakdownByDateRangeShouldNotCountOverestimatedTimeWhenItemIsUnfinished()
+        public async Task GetEstimationBreakdownByDateRangeShouldNotCountOverestimatedTimeWhenNotApplicable()
         {
             var current = new List<WorkItemProgressionDto>
             {

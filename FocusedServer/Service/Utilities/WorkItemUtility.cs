@@ -9,6 +9,23 @@ namespace Service.Utilities
 {
     public static class WorkItemUtility
     {
+        public static bool IsOverestimated(ProgressionCounter<double> progress)
+        {
+            if (!progress.IsCompleted)
+            {
+                return false;
+            }
+
+            var remaining = progress.Target - progress.Current;
+
+            if (remaining > 3)
+            {
+                return true;
+            }
+
+            return progress.Target > 0.5 && remaining / progress.Target >= 0.6;
+        }
+
         public static WorkItemDto ToWorkItemDto(WorkItemWithTimeSeries item, DateTime? start = null, DateTime? end = null)
         {
             var startTime = start ?? item.TimeInfo.Created;

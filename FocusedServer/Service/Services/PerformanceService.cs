@@ -2,6 +2,7 @@ using Core.Dtos;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Models.Generic;
+using Service.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -110,11 +111,8 @@ namespace Service.Services
                     continue;
                 }
 
-                var remaining = overallProgress.Target - overallProgress.Current;
-                var remainingPercentage = remaining / overallProgress.Target;
-                var isOverestimate = remaining > 3 || (overallProgress.Target > 0.5 && remainingPercentage >= 0.6);
                 breakdown.Normal += currentProgress.Current;
-                breakdown.Overestimate += overallProgress.IsCompleted && isOverestimate ? remaining : 0;
+                breakdown.Overestimate += WorkItemUtility.IsOverestimated(overallProgress) ? overallProgress.Target - overallProgress.Current : 0;
             }
 
             return breakdown;

@@ -56,6 +56,38 @@ namespace Services.Test.UnitTests.Utilities
         }
 
         [Test]
+        public void IsOverestimatedShouldReturnFalseWhenItemIsUnfinished()
+        {
+            var progress = new ProgressionCounter<double> { Current = 2, Target = 5, IsCompleted = false };
+
+            Assert.IsFalse(WorkItemUtility.IsOverestimated(progress));
+        }
+
+        [Test]
+        public void IsOverestimatedShouldReturnFalseWhenEstimationIsLessThanThirtyMinutes()
+        {
+            var progress = new ProgressionCounter<double> { Current = 0.3, Target = 0.4, IsCompleted = true };
+
+            Assert.IsFalse(WorkItemUtility.IsOverestimated(progress));
+        }
+
+        [Test]
+        public void IsOverestimatedShouldReturnTrueWhenOverestimationExceedsThreeHours()
+        {
+            var progress = new ProgressionCounter<double> { Current = 1.5, Target = 5, IsCompleted = true };
+
+            Assert.IsTrue(WorkItemUtility.IsOverestimated(progress));
+        }
+
+        [Test]
+        public void IsOverestimatedShouldReturnTrueWhenOverestimationReachesSixtyPercent()
+        {
+            var progress = new ProgressionCounter<double> { Current = 2, Target = 5, IsCompleted = true };
+
+            Assert.IsTrue(WorkItemUtility.IsOverestimated(progress));
+        }
+
+        [Test]
         public void ToWorkItemDtoShouldReturnCompletedProgression()
         {
             var item = new WorkItemWithTimeSeries
