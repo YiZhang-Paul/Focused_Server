@@ -42,7 +42,7 @@ namespace Service.Services
 
         public async Task<bool> StartFocusSession(string userId, FocusSessionStartupOption option)
         {
-            if (option.StartingItem == null || await FocusSessionRepository.GetUnfinishedFocusSession(userId).ConfigureAwait(false) != null)
+            if (string.IsNullOrWhiteSpace(option.WorkItemId) || await FocusSessionRepository.GetUnfinishedFocusSession(userId).ConfigureAwait(false) != null)
             {
                 return false;
             }
@@ -61,7 +61,7 @@ namespace Service.Services
                 return false;
             }
 
-            return await WorkItemService.StartWorkItem(userId, option.StartingItem.Id).ConfigureAwait(false);
+            return await WorkItemService.StartWorkItem(userId, option.WorkItemId).ConfigureAwait(false);
         }
 
         public async Task<bool> StopFocusSession(string userId, string id)

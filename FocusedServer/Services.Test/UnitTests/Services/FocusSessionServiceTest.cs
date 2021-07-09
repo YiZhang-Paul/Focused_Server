@@ -116,7 +116,7 @@ namespace Services.Test.UnitTests.Services
         [Test]
         public async Task StartFocusSessionShouldReturnFalseWhenStartingWorkItemIsNotSpecified()
         {
-            var option = new FocusSessionStartupOption { StartingItem = null };
+            var option = new FocusSessionStartupOption { WorkItemId = null };
 
             Assert.IsFalse(await SubjectUnderTest.StartFocusSession("user_id", option).ConfigureAwait(false));
         }
@@ -124,7 +124,7 @@ namespace Services.Test.UnitTests.Services
         [Test]
         public async Task StartFocusSessionShouldReturnFalseWhenUnfinishedFocusSessionFound()
         {
-            var option = new FocusSessionStartupOption { StartingItem = new WorkItemDto() };
+            var option = new FocusSessionStartupOption { WorkItemId = ObjectId.GenerateNewId().ToString() };
             FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
 
             Assert.IsFalse(await SubjectUnderTest.StartFocusSession("user_id", option).ConfigureAwait(false));
@@ -133,7 +133,7 @@ namespace Services.Test.UnitTests.Services
         [Test]
         public async Task StartFocusSessionShouldReturnFalseWhenFailedToCreateFocusSession()
         {
-            var option = new FocusSessionStartupOption { StartingItem = new WorkItemDto() };
+            var option = new FocusSessionStartupOption { WorkItemId = ObjectId.GenerateNewId().ToString() };
             FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync((FocusSession)null);
             FocusSessionRepository.Setup(_ => _.Add(It.IsAny<FocusSession>())).ReturnsAsync(string.Empty);
 
@@ -146,7 +146,7 @@ namespace Services.Test.UnitTests.Services
         [Test]
         public async Task StartFocusSessionShouldReturnFalseWhenFailedToStartWorkItem()
         {
-            var option = new FocusSessionStartupOption { StartingItem = new WorkItemDto() };
+            var option = new FocusSessionStartupOption { WorkItemId = ObjectId.GenerateNewId().ToString() };
             FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync((FocusSession)null);
             FocusSessionRepository.Setup(_ => _.Add(It.IsAny<FocusSession>())).ReturnsAsync(ObjectId.GenerateNewId().ToString());
             WorkItemService.Setup(_ => _.StartWorkItem(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
@@ -160,7 +160,7 @@ namespace Services.Test.UnitTests.Services
         [Test]
         public async Task StartFocusSessionShouldReturnTrueWhenSuccessfullyCreatedFocusSession()
         {
-            var option = new FocusSessionStartupOption { StartingItem = new WorkItemDto(), TotalMinutes = 30 };
+            var option = new FocusSessionStartupOption { WorkItemId = ObjectId.GenerateNewId().ToString(), TotalMinutes = 30 };
             FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync((FocusSession)null);
             FocusSessionRepository.Setup(_ => _.Add(It.IsAny<FocusSession>())).ReturnsAsync(ObjectId.GenerateNewId().ToString());
             WorkItemService.Setup(_ => _.StartWorkItem(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
