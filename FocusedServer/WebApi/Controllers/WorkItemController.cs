@@ -54,13 +54,6 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("{id}/start")]
-        public async Task<bool> StartWorkItem(string id)
-        {
-            return await WorkItemService.StartWorkItem(UserId, id).ConfigureAwait(false);
-        }
-
-        [HttpPost]
         [Route("stop")]
         public async Task<bool> StopWorkItem([FromQuery]WorkItemStatus status)
         {
