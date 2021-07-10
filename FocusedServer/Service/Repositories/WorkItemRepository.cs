@@ -61,6 +61,7 @@ namespace Service.Repositories
 
             var filter = builder.And(
                 builder.Eq(_ => _.UserId, userId),
+                builder.Ne(_ => _.Status, WorkItemStatus.Completed),
                 builder.Gte(_ => _.DueDate, start),
                 builder.Lte(_ => _.DueDate, end),
                 builder.Lte(_ => _.DueDate, DateTime.Now)
@@ -75,6 +76,7 @@ namespace Service.Repositories
 
             var filter = builder.And(
                 builder.Eq(_ => _.UserId, userId),
+                builder.Ne(_ => _.Status, WorkItemStatus.Completed),
                 builder.Gte(_ => _.DueDate, start),
                 builder.Lte(_ => _.DueDate, end),
                 builder.Gt(_ => _.DueDate, DateTime.Now)
