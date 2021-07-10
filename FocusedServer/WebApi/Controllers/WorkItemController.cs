@@ -1,5 +1,4 @@
 using Core.Dtos;
-using Core.Enums;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Models.WorkItem;
@@ -51,13 +50,6 @@ namespace WebApi.Controllers
         public async Task<bool> DeleteWorkItem(string id)
         {
             return await WorkItemRepository.Delete(UserId, id).ConfigureAwait(false);
-        }
-
-        [HttpPost]
-        [Route("stop")]
-        public async Task<bool> StopWorkItem([FromQuery]WorkItemStatus status)
-        {
-            return await WorkItemService.StopWorkItem(UserId, status).ConfigureAwait(false);
         }
 
         [HttpGet]
