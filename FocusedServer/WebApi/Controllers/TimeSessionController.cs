@@ -1,4 +1,5 @@
 using Core.Dtos;
+using Core.Enums;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Models.TimeSession;
@@ -64,17 +65,17 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
+        [Route("focus-session/overlearning/start")]
+        public async Task<bool> StartOverlearning([FromQuery]WorkItemStatus status = WorkItemStatus.Highlighted)
+        {
+            return await FocusSessionService.StartOverlearning(UserId, status).ConfigureAwait(false);
+        }
+
+        [HttpPost]
         [Route("focus-session/work-items/{id}/start")]
         public async Task<bool> SwitchWorkItem(string id)
         {
             return await FocusSessionService.SwitchWorkItem(UserId, id).ConfigureAwait(false);
-        }
-
-        [HttpPost]
-        [Route("focus-session/overlearning/start")]
-        public async Task<bool> StartOverlearning()
-        {
-            return await FocusSessionService.StartOverlearning(UserId).ConfigureAwait(false);
         }
 
         [HttpGet]

@@ -84,7 +84,7 @@ namespace Service.Services
             return await WorkItemService.StopWorkItem(userId).ConfigureAwait(false) && await StopOverlearning(userId).ConfigureAwait(false);
         }
 
-        public async Task<bool> StartOverlearning(string userId)
+        public async Task<bool> StartOverlearning(string userId, WorkItemStatus targetStatus)
         {
             var session = await FocusSessionRepository.GetUnfinishedFocusSession(userId).ConfigureAwait(false);
 
@@ -93,7 +93,7 @@ namespace Service.Services
                 return false;
             }
 
-            if (!await WorkItemService.StopWorkItem(userId).ConfigureAwait(false))
+            if (!await WorkItemService.StopWorkItem(userId, targetStatus).ConfigureAwait(false))
             {
                 return false;
             }
