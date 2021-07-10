@@ -15,18 +15,11 @@ namespace Service.Services
     {
         private IWorkItemRepository WorkItemRepository { get; set; }
         private ITimeSeriesRepository TimeSeriesRepository { get; set; }
-        private IFocusSessionRepository FocusSessionRepository { get; set; }
 
-        public WorkItemService
-        (
-            IWorkItemRepository workItemRepository,
-            ITimeSeriesRepository timeSeriesRepository,
-            IFocusSessionRepository focusSessionRepository
-        )
+        public WorkItemService(IWorkItemRepository workItemRepository, ITimeSeriesRepository timeSeriesRepository)
         {
             WorkItemRepository = workItemRepository;
             TimeSeriesRepository = timeSeriesRepository;
-            FocusSessionRepository = focusSessionRepository;
         }
 
         public async Task<string> CreateWorkItem(WorkItemDto item)
@@ -64,14 +57,8 @@ namespace Service.Services
         public async Task<bool> StartWorkItem(string userId, string id)
         {
             var item = await GetWorkItem(userId, id).ConfigureAwait(false);
-            var activeSession = await FocusSessionRepository.GetUnfinishedFocusSession(item?.UserId ?? string.Empty).ConfigureAwait(false);
 
-            if (item == null || activeSession == null)
-            {
-                return false;
-            }
-
-            if (!await StopWorkItem(userId).ConfigureAwait(false))
+            if (item == null)
             {
                 return false;
             }
