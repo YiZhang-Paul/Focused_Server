@@ -63,6 +63,13 @@ namespace WebApi.Controllers
             return await FocusSessionService.StopFocusSession(UserId, id).ConfigureAwait(false);
         }
 
+        [HttpPost]
+        [Route("focus-session/work-items/{id}/start")]
+        public async Task<bool> SwitchWorkItem(string id)
+        {
+            return await FocusSessionService.SwitchWorkItem(UserId, id).ConfigureAwait(false);
+        }
+
         [HttpGet]
         [Route("active-break-session")]
         public async Task<BreakSession> GetActiveBreakSession()

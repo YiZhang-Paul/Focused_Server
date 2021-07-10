@@ -5,6 +5,7 @@ using Core.Interfaces.Services;
 using Core.Models.TimeSession;
 using Service.Utilities;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Service.Services
@@ -80,7 +81,22 @@ namespace Service.Services
                 return false;
             }
 
-            return await WorkItemService.StopWorkItem(userId).ConfigureAwait(false);
+            return await WorkItemService.StopWorkItem(userId).ConfigureAwait(false) && await StopOverlearning(userId).ConfigureAwait(false);
+        }
+
+        public async Task<bool> SwitchWorkItem(string userId, string id)
+        {
+            if (await FocusSessionRepository.GetUnfinishedFocusSession(userId).ConfigureAwait(false) == null)
+            {
+                return false;
+            }
+
+            if (!await WorkItemService.StopWorkItem(userId).ConfigureAwait(false) || !await StopOverlearning(userId).ConfigureAwait(false))
+            {
+                return false;
+            }
+
+            return await WorkItemService.StartWorkItem(userId, id).ConfigureAwait(false);
         }
 
         public async Task<double> GetOverlearningHoursByDateRange(string userId, DateTime start, DateTime end)
@@ -88,6 +104,21 @@ namespace Service.Services
             var series = await TimeSeriesRepository.GetTimeSeriesByDateRange(userId, start, end, TimeSeriesType.Session);
 
             return TimeSeriesUtility.GetTotalTime(series, start, end);
+        }
+
+        private async Task<bool> StopOverlearning(string userId)
+        {
+            var series = await TimeSeriesRepository.GetOpenTimeRange(userId).ConfigureAwait(false);
+            var overlearning = series.LastOrDefault(_ => _.Type == TimeSeriesType.Session);
+
+            if (overlearning == null)
+            {
+                return true;
+            }
+
+            overlearning.EndTime = DateTime.Now;
+
+            return await TimeSeriesRepository.Replace(overlearning).ConfigureAwait(false) != null;
         }
 
         private async Task<FocusSessionDto> GetOpenFocusSessionMeta(string userId, bool isStale)

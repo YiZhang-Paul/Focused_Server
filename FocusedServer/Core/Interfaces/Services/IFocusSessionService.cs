@@ -11,6 +11,7 @@ namespace Core.Interfaces.Services
         Task<FocusSessionDto> GetStaleFocusSessionMeta(string userId);
         Task<bool> StartFocusSession(string userId, FocusSessionStartupOption option);
         Task<bool> StopFocusSession(string userId, string id);
+        Task<bool> SwitchWorkItem(string userId, string id);
         Task<double> GetOverlearningHoursByDateRange(string userId, DateTime start, DateTime end);
     }
 }
