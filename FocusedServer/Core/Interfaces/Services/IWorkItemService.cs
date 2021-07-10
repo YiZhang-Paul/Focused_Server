@@ -16,6 +16,7 @@ namespace Core.Interfaces.Services
         Task<bool> StopWorkItem(string userId, WorkItemStatus targetStatus = WorkItemStatus.Highlighted);
         Task<WorkItemDto> UpdateWorkItemMeta(WorkItemDto item);
         Task<ActivityBreakdownDto> GetWorkItemActivityBreakdownByDateRange(string userId, DateTime start, DateTime end);
-        Task<List<WorkItemProgressionDto>> GetWorkItemProgressionByDateRange(string userId, DateTime start, DateTime end);
+        Task<List<WorkItemProgressionDto>> GetWorkItemCurrentProgressionByDateRange(string userId, DateTime start, DateTime end);
+        Task<List<WorkItemProgressionDto>> GetWorkItemOverallProgressionByDateRange(string userId, DateTime start, DateTime end);
     }
 }

@@ -125,7 +125,7 @@ namespace Service.Services
 
         public async Task<ActivityBreakdownDto> GetWorkItemActivityBreakdownByDateRange(string userId, DateTime start, DateTime end)
         {
-            var progress = await GetWorkItemProgressionByDateRange(userId, start, end).ConfigureAwait(false);
+            var progress = await GetWorkItemCurrentProgressionByDateRange(userId, start, end).ConfigureAwait(false);
 
             return new ActivityBreakdownDto
             {
@@ -135,11 +135,22 @@ namespace Service.Services
             };
         }
 
-        public async Task<List<WorkItemProgressionDto>> GetWorkItemProgressionByDateRange(string userId, DateTime start, DateTime end)
+        public async Task<List<WorkItemProgressionDto>> GetWorkItemCurrentProgressionByDateRange(string userId, DateTime start, DateTime end)
         {
+            return await GetWorkItemProgressionByDateRange(userId, start, end, false).ConfigureAwait(false);
+        }
+
+        public async Task<List<WorkItemProgressionDto>> GetWorkItemOverallProgressionByDateRange(string userId, DateTime start, DateTime end)
+        {
+            return await GetWorkItemProgressionByDateRange(userId, start, end, true).ConfigureAwait(false);
+        }
+
+        private async Task<List<WorkItemProgressionDto>> GetWorkItemProgressionByDateRange(string userId, DateTime start, DateTime end, bool isOverall)
+        {
+            var startDate = isOverall ? new DateTime(1970, 1, 1) : start;
             var ids = await TimeSeriesRepository.GetDataSourceIdsByDateRange(userId, start, end, TimeSeriesType.WorkItem).ConfigureAwait(false);
 
-            return await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, ids, start, end).ConfigureAwait(false);
+            return await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, ids, startDate, end).ConfigureAwait(false);
         }
     }
 }

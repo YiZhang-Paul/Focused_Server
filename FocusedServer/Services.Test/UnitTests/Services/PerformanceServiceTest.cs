@@ -158,10 +158,8 @@ namespace Services.Test.UnitTests.Services
 
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 10);
-
-            WorkItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
-                .Returns(Task.FromResult(current))
-                .Returns(Task.FromResult(overall));
+            WorkItemService.Setup(_ => _.GetWorkItemCurrentProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(current);
+            WorkItemService.Setup(_ => _.GetWorkItemOverallProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(overall);
 
             var result = await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
 
@@ -194,10 +192,8 @@ namespace Services.Test.UnitTests.Services
 
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 10);
-
-            WorkItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
-                .Returns(Task.FromResult(current))
-                .Returns(Task.FromResult(overall));
+            WorkItemService.Setup(_ => _.GetWorkItemCurrentProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(current);
+            WorkItemService.Setup(_ => _.GetWorkItemOverallProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(overall);
 
             var result = await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
 
@@ -230,10 +226,8 @@ namespace Services.Test.UnitTests.Services
 
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 10);
-
-            WorkItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
-                .Returns(Task.FromResult(current))
-                .Returns(Task.FromResult(overall));
+            WorkItemService.Setup(_ => _.GetWorkItemCurrentProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(current);
+            WorkItemService.Setup(_ => _.GetWorkItemOverallProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(overall);
 
             var result = await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
 
@@ -285,10 +279,8 @@ namespace Services.Test.UnitTests.Services
 
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 10);
-
-            WorkItemService.SetupSequence(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
-                .Returns(Task.FromResult(current))
-                .Returns(Task.FromResult(overall));
+            WorkItemService.Setup(_ => _.GetWorkItemCurrentProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(current);
+            WorkItemService.Setup(_ => _.GetWorkItemOverallProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(overall);
 
             var result = await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
 
@@ -300,11 +292,11 @@ namespace Services.Test.UnitTests.Services
         [Test]
         public async Task GetEstimationBreakdownByDateRangeShouldDefaultToPastTwoWeeks()
         {
-            WorkItemService.Setup(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<WorkItemProgressionDto>());
+            WorkItemService.Setup(_ => _.GetWorkItemCurrentProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<WorkItemProgressionDto>());
 
             await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", null, null).ConfigureAwait(false);
 
-            WorkItemService.Verify(_ => _.GetWorkItemProgressionByDateRange
+            WorkItemService.Verify(_ => _.GetWorkItemCurrentProgressionByDateRange
             (
                 It.IsAny<string>(),
                 It.Is<DateTime>(date => (DateTime.Now.AddDays(-14) - date).TotalSeconds < 3),

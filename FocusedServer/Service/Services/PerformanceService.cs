@@ -2,6 +2,7 @@ using Core.Dtos;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Models.Generic;
+using Core.Models.User;
 using Service.Utilities;
 using System;
 using System.Collections.Generic;
@@ -92,8 +93,8 @@ namespace Service.Services
         {
             var endDate = end ?? DateTime.Now;
             var startDate = start ?? endDate.AddDays(-DefaultPeriod);
-            var currentProgresses = await WorkItemService.GetWorkItemProgressionByDateRange(userId, startDate, endDate).ConfigureAwait(false);
-            var overallProgresses = await WorkItemService.GetWorkItemProgressionByDateRange(userId, new DateTime(1970, 1, 1), endDate).ConfigureAwait(false);
+            var currentProgresses = await WorkItemService.GetWorkItemCurrentProgressionByDateRange(userId, startDate, endDate).ConfigureAwait(false);
+            var overallProgresses = await WorkItemService.GetWorkItemOverallProgressionByDateRange(userId, startDate, endDate).ConfigureAwait(false);
             var overallLookup = overallProgresses.ToDictionary(_ => _.Id);
             var breakdown = new EstimationBreakdownDto();
 
@@ -127,6 +128,22 @@ namespace Service.Services
             {
                 PastDue = (int)await WorkItemRepository.GetPastDueWorkItemsCount(userId, startDate, endDate).ConfigureAwait(false),
                 Looming = (int)await WorkItemRepository.GetLoomingWorkItemsCount(userId, startDate, endDate.AddDays(1)).ConfigureAwait(false)
+            };
+        }
+
+        public async Task<PerformanceRating> GetPerformanceRating(string userId, DateTime? start, DateTime? end)
+        {
+            var endDate = end ?? DateTime.Now;
+            var startDate = start ?? endDate.AddDays(-DefaultPeriod);
+            var progresses = await WorkItemService.GetWorkItemOverallProgressionByDateRange(userId, startDate, endDate).ConfigureAwait(false);
+            var breakdowns = await GetActivityBreakdownByDays(userId, startDate, endDate).ConfigureAwait(false);
+            var durations = breakdowns.Select(_ => _.Regular + _.Recurring + _.Overlearning).ToList();
+
+            return new PerformanceRating
+            {
+                Estimation = PerformanceRatingUtility.GetEstimationRating(progresses),
+                Sustainability = PerformanceRatingUtility.GetSustainabilityRating(durations),
+                Determination = (double)durations.Count(_ => _ >= DailyTarget) / durations.Count
             };
         }
     }

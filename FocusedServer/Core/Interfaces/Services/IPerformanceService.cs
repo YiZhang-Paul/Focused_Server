@@ -1,5 +1,6 @@
 using Core.Dtos;
 using Core.Models.Generic;
+using Core.Models.User;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -14,5 +15,6 @@ namespace Core.Interfaces.Services
         Task<ActivityBreakdownDto> GetActivityBreakdownByDateRange(string userId, DateTime? start, DateTime? end);
         Task<EstimationBreakdownDto> GetEstimationBreakdownByDateRange(string userId, DateTime? start, DateTime? end);
         Task<DueDateBreakdownDto> GetDueDateBreakdownByDateRange(string userId, DateTime? start, DateTime? end);
+        Task<PerformanceRating> GetPerformanceRating(string userId, DateTime? start, DateTime? end);
     }
 }

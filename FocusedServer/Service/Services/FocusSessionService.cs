@@ -128,7 +128,7 @@ namespace Service.Services
 
         public async Task<double> GetOverlearningHoursByDateRange(string userId, DateTime start, DateTime end)
         {
-            var series = await TimeSeriesRepository.GetTimeSeriesByDateRange(userId, start, end, TimeSeriesType.Session);
+            var series = await TimeSeriesRepository.GetTimeSeriesByDateRange(userId, start, end, TimeSeriesType.Session).ConfigureAwait(false);
 
             return TimeSeriesUtility.GetTotalTime(series, start, end);
         }
