@@ -84,6 +84,33 @@ namespace Service.Services
             return await WorkItemService.StopWorkItem(userId).ConfigureAwait(false) && await StopOverlearning(userId).ConfigureAwait(false);
         }
 
+        public async Task<bool> StartOverlearning(string userId)
+        {
+            var session = await FocusSessionRepository.GetUnfinishedFocusSession(userId).ConfigureAwait(false);
+
+            if (session == null)
+            {
+                return false;
+            }
+
+            if (!await WorkItemService.StopWorkItem(userId).ConfigureAwait(false))
+            {
+                return false;
+            }
+
+            var series = new TimeSeries
+            {
+                UserId = userId,
+                StartTime = DateTime.Now,
+                Type = TimeSeriesType.Session,
+                DataSourceId = session.Id
+            };
+
+            var id = await TimeSeriesRepository.Add(series).ConfigureAwait(false);
+
+            return !string.IsNullOrWhiteSpace(id);
+        }
+
         public async Task<bool> SwitchWorkItem(string userId, string id)
         {
             if (await FocusSessionRepository.GetUnfinishedFocusSession(userId).ConfigureAwait(false) == null)

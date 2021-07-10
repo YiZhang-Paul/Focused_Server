@@ -70,6 +70,13 @@ namespace WebApi.Controllers
             return await FocusSessionService.SwitchWorkItem(UserId, id).ConfigureAwait(false);
         }
 
+        [HttpPost]
+        [Route("focus-session/overlearning/start")]
+        public async Task<bool> StartOverlearning()
+        {
+            return await FocusSessionService.StartOverlearning(UserId).ConfigureAwait(false);
+        }
+
         [HttpGet]
         [Route("active-break-session")]
         public async Task<BreakSession> GetActiveBreakSession()
