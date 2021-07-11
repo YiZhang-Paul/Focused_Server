@@ -222,6 +222,7 @@ namespace Services.Test.UnitTests.Services
             FocusSessionRepository.Setup(_ => _.Get(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(session);
             FocusSessionRepository.Setup(_ => _.Replace(It.IsAny<FocusSession>())).ReturnsAsync(session);
             WorkItemService.Setup(_ => _.StopWorkItem(It.IsAny<string>(), It.IsAny<WorkItemStatus>())).ReturnsAsync(true);
+            TimeSeriesRepository.Setup(_ => _.GetOpenTimeRange(It.IsAny<string>())).ReturnsAsync(new List<TimeSeries>());
 
             var result = await SubjectUnderTest.StopFocusSession("user_id", "session_id").ConfigureAwait(false);
 
@@ -237,6 +238,7 @@ namespace Services.Test.UnitTests.Services
             FocusSessionRepository.Setup(_ => _.Get(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(session);
             FocusSessionRepository.Setup(_ => _.Replace(It.IsAny<FocusSession>())).ReturnsAsync(session);
             WorkItemService.Setup(_ => _.StopWorkItem(It.IsAny<string>(), It.IsAny<WorkItemStatus>())).ReturnsAsync(true);
+            TimeSeriesRepository.Setup(_ => _.GetOpenTimeRange(It.IsAny<string>())).ReturnsAsync(new List<TimeSeries>());
 
             var result = await SubjectUnderTest.StopFocusSession("user_id", "session_id").ConfigureAwait(false);
 

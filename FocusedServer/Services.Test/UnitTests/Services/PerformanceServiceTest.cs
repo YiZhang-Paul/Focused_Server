@@ -293,10 +293,18 @@ namespace Services.Test.UnitTests.Services
         public async Task GetEstimationBreakdownByDateRangeShouldDefaultToPastTwoWeeks()
         {
             WorkItemService.Setup(_ => _.GetWorkItemCurrentProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<WorkItemProgressionDto>());
+            WorkItemService.Setup(_ => _.GetWorkItemOverallProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<WorkItemProgressionDto>());
 
             await SubjectUnderTest.GetEstimationBreakdownByDateRange("user_id", null, null).ConfigureAwait(false);
 
             WorkItemService.Verify(_ => _.GetWorkItemCurrentProgressionByDateRange
+            (
+                It.IsAny<string>(),
+                It.Is<DateTime>(date => (DateTime.Now.AddDays(-14) - date).TotalSeconds < 3),
+                It.Is<DateTime>(date => (DateTime.Now - date).TotalSeconds < 3)
+            ), Times.Once);
+
+            WorkItemService.Verify(_ => _.GetWorkItemOverallProgressionByDateRange
             (
                 It.IsAny<string>(),
                 It.Is<DateTime>(date => (DateTime.Now.AddDays(-14) - date).TotalSeconds < 3),
@@ -319,7 +327,7 @@ namespace Services.Test.UnitTests.Services
         }
 
         [Test]
-        public async Task GetDueDateBreakdownByDateRangeShouldDefaultToPastTwoWeeks()
+        public async Task GetDueDateBreakdownByDateRangeShouldCheckAllWorkItemsOnDefault()
         {
             WorkItemRepository.Setup(_ => _.GetUncompletedPastDueWorkItemsCount(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(3);
             WorkItemRepository.Setup(_ => _.GetLoomingWorkItemsCount(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(2);
@@ -329,14 +337,14 @@ namespace Services.Test.UnitTests.Services
             WorkItemRepository.Verify(_ => _.GetUncompletedPastDueWorkItemsCount
             (
                 It.IsAny<string>(),
-                It.Is<DateTime>(date => (DateTime.Now.AddDays(-14) - date).TotalSeconds < 3),
+                It.Is<DateTime>(date => date == new DateTime(1970, 1, 1)),
                 It.Is<DateTime>(date => (DateTime.Now - date).TotalSeconds < 3)
             ), Times.Once);
 
             WorkItemRepository.Verify(_ => _.GetLoomingWorkItemsCount
             (
                 It.IsAny<string>(),
-                It.Is<DateTime>(date => (DateTime.Now.AddDays(-14) - date).TotalSeconds < 3),
+                It.Is<DateTime>(date => date == new DateTime(1970, 1, 1)),
                 It.Is<DateTime>(date => (DateTime.Now.AddDays(1) - date).TotalSeconds < 3)
             ), Times.Once);
         }
