@@ -34,15 +34,20 @@ namespace Service.Utilities
                 return true;
             }
 
+            if (item.Status == WorkItemStatus.Completed)
+            {
+                return false;
+            }
+
             if (item.Type == WorkItemType.Interruption)
             {
                 // interruption must be handled on the same day of creation
-                return DateTime.Now > item.TimeInfo.Created.AddDays(1).Date;
+                return DateTime.Now >= item.TimeInfo.Created.AddDays(1).Date;
             }
 
             if (item.Type == WorkItemType.Regular)
             {
-                return item.DueDate != null && DateTime.Now > item.DueDate;
+                return item.DueDate != null && DateTime.Now >= item.DueDate;
             }
 
             return false;

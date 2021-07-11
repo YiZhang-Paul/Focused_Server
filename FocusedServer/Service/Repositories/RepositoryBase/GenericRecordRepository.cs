@@ -18,6 +18,13 @@ namespace Service.Repositories.RepositoryBase
             return await Collection.Find(filter).FirstOrDefaultAsync().ConfigureAwait(false);
         }
 
+        public async Task<string> Add(T document)
+        {
+            await Collection.InsertOneAsync(document).ConfigureAwait(false);
+
+            return document.Id;
+        }
+
         public async Task<T> Replace(T document)
         {
             var filter = Builders<T>.Filter.Eq(_ => _.Id, document.Id);

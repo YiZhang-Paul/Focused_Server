@@ -88,6 +88,122 @@ namespace Services.Test.UnitTests.Utilities
         }
 
         [Test]
+        public void IsPastDueShouldReturnFalseWhenUncompletedItemIsNotPastDue()
+        {
+            var item = new WorkItem
+            {
+                Type = WorkItemType.Regular,
+                Status = WorkItemStatus.Idle,
+                DueDate = DateTime.Now.AddDays(1)
+            };
+
+            Assert.IsFalse(WorkItemUtility.IsPastDue(item));
+        }
+
+        [Test]
+        public void IsPastDueShouldReturnFalseWhenRegularItemDoesNotHaveDueDate()
+        {
+            var item = new WorkItem
+            {
+                Type = WorkItemType.Regular,
+                Status = WorkItemStatus.Idle,
+                DueDate = null
+            };
+
+            Assert.IsFalse(WorkItemUtility.IsPastDue(item));
+        }
+
+        [Test]
+        public void IsPastDueShouldReturnFalseWhenRegularItemIsNotPastDueWhenCompleted()
+        {
+            var item = new WorkItem
+            {
+                Type = WorkItemType.Regular,
+                Status = WorkItemStatus.Completed,
+                DueDate = new DateTime(2021, 1, 10),
+                CompletionRecords = new List<CompletionRecord>
+                {
+                    new CompletionRecord { Time = new DateTime(2021, 1, 9), IsPastDue = false }
+                }
+            };
+
+            Assert.IsFalse(WorkItemUtility.IsPastDue(item));
+        }
+
+        [Test]
+        public void IsPastDueShouldReturnFalseWhenRecurringItemIsNotPastDue()
+        {
+            var item = new WorkItem
+            {
+                Type = WorkItemType.Recurring,
+                Status = WorkItemStatus.Idle
+            };
+
+            Assert.IsFalse(WorkItemUtility.IsPastDue(item));
+        }
+
+        [Test]
+        public void IsPastDueShouldReturnFalseWhenInterruptionItemIsNotPastDueWhenCompleted()
+        {
+            var item = new WorkItem
+            {
+                Type = WorkItemType.Interruption,
+                Status = WorkItemStatus.Completed,
+                TimeInfo = new TimeInfo { Created = new DateTime(2021, 1, 9) },
+                CompletionRecords = new List<CompletionRecord>
+                {
+                    new CompletionRecord { Time = new DateTime(2021, 1, 9, 23, 59, 59), IsPastDue = false }
+                }
+            };
+
+            Assert.IsFalse(WorkItemUtility.IsPastDue(item));
+        }
+
+        [Test]
+        public void IsPastDueShouldReturnTrueWhenItemIsPastDueWhenCompleted()
+        {
+            var item = new WorkItem
+            {
+                Type = WorkItemType.Regular,
+                Status = WorkItemStatus.Completed,
+                DueDate = new DateTime(2021, 1, 10),
+                CompletionRecords = new List<CompletionRecord>
+                {
+                    new CompletionRecord { Time = new DateTime(2021, 1, 9), IsPastDue = false },
+                    new CompletionRecord { Time = new DateTime(2021, 1, 11), IsPastDue = true }
+                }
+            };
+
+            Assert.IsTrue(WorkItemUtility.IsPastDue(item));
+        }
+
+        [Test]
+        public void IsPastDueShouldReturnTrueWhenRegularItemIsPastDue()
+        {
+            var item = new WorkItem
+            {
+                Type = WorkItemType.Regular,
+                Status = WorkItemStatus.Idle,
+                DueDate = new DateTime(2021, 1, 10)
+            };
+
+            Assert.IsTrue(WorkItemUtility.IsPastDue(item));
+        }
+
+        [Test]
+        public void IsPastDueShouldReturnTrueWhenInterruptionItemIsPastDue()
+        {
+            var item = new WorkItem
+            {
+                Type = WorkItemType.Interruption,
+                Status = WorkItemStatus.Idle,
+                TimeInfo = new TimeInfo { Created = DateTime.Now.Date.AddHours(-1) }
+            };
+
+            Assert.IsTrue(WorkItemUtility.IsPastDue(item));
+        }
+
+        [Test]
         public void ToWorkItemDtoShouldReturnCompletedProgression()
         {
             var item = new WorkItemWithTimeSeries

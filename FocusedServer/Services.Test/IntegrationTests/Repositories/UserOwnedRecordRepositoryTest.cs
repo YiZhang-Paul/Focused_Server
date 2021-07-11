@@ -53,6 +53,44 @@ namespace Services.Test.IntegrationTests.Repositories
         }
 
         [Test]
+        public async Task GetShouldReturnEmptyCollectionWhenNoUserOwnedRecordFound()
+        {
+            var records = new List<UserOwnedRecord>
+            {
+                new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id_1" },
+                new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id_2" },
+                new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id_3" }
+            };
+
+            var ids = new List<string> { ObjectId.GenerateNewId().ToString() };
+            await SubjectUnderTest.Add(records).ConfigureAwait(false);
+
+            var result = await SubjectUnderTest.Get("user_id_4", ids).ConfigureAwait(false);
+
+            Assert.IsFalse(result.Any());
+        }
+
+        [Test]
+        public async Task GetShouldReturnUserOwnedRecordsFound()
+        {
+            var records = new List<UserOwnedRecord>
+            {
+                new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id_1" },
+                new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id_1" },
+                new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id_1" }
+            };
+
+            var ids = new List<string> { records[1].Id, records[2].Id };
+            await SubjectUnderTest.Add(records).ConfigureAwait(false);
+
+            var result = await SubjectUnderTest.Get("user_id_1", ids).ConfigureAwait(false);
+
+            Assert.AreEqual(2, result.Count);
+            Assert.AreEqual(records[1].Id, result[0].Id);
+            Assert.AreEqual(records[2].Id, result[1].Id);
+        }
+
+        [Test]
         public void AddShouldThrowWhenUserIdIsMissing()
         {
             var record = new UserOwnedRecord { UserId = " " };

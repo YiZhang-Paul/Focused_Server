@@ -13,6 +13,11 @@ namespace Service.Utilities
         {
             var progression = workItems.Where(_ => _.Progress.IsCompleted).Select(_ => _.Progress).ToList();
 
+            if (!progression.Any())
+            {
+                return 0;
+            }
+
             return (double)progression.Count(_ => !WorkItemUtility.IsOverestimated(_) && _.Current <= _.Target) / progression.Count;
         }
 
@@ -20,12 +25,22 @@ namespace Service.Utilities
         {
             var nonInterruptions = items.Where(_ => _.Type != WorkItemType.Interruption).ToList();
 
+            if (!nonInterruptions.Any())
+            {
+                return 0;
+            }
+
             return (double)nonInterruptions.Count(_ => !WorkItemUtility.IsPastDue(_)) / nonInterruptions.Count;
         }
 
         public static double GetAdaptabilityRating(List<WorkItem> items)
         {
             var interruptions = items.Where(_ => _.Type == WorkItemType.Interruption).ToList();
+
+            if (!interruptions.Any())
+            {
+                return 0;
+            }
 
             return (double)interruptions.Count(_ => !WorkItemUtility.IsPastDue(_)) / interruptions.Count;
         }
