@@ -69,7 +69,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("user-rating")]
+        [Route("ratings")]
         public async Task<PerformanceRating> GetPerformanceRating([FromQuery]DateTime? start, [FromQuery]DateTime? end)
         {
             return await PerformanceService.GetPerformanceRating(UserId, start, end).ConfigureAwait(false);
