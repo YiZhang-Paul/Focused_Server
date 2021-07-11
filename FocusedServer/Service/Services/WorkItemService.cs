@@ -29,6 +29,7 @@ namespace Service.Services
             {
                 var workItem = new WorkItem
                 {
+                    UserId = item.UserId,
                     Name = item.Name.Trim(),
                     Type = item.Type,
                     Priority = item.Priority,
