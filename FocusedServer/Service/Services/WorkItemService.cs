@@ -100,7 +100,7 @@ namespace Service.Services
 
             if (targetStatus == WorkItemStatus.Completed)
             {
-                item.CompletionRecords.Add(WorkItemUtility.GetCompletionRecord(item));
+                WorkItemUtility.AddCompletionRecord(item);
             }
 
             return await TimeSeriesRepository.Replace(series).ConfigureAwait(false) != null && await UpdateWorkItem(item).ConfigureAwait(false) != null;
@@ -117,7 +117,7 @@ namespace Service.Services
 
             if (workItem.Status != item.Status && item.Status == WorkItemStatus.Completed)
             {
-                workItem.CompletionRecords.Add(WorkItemUtility.GetCompletionRecord(workItem));
+                WorkItemUtility.AddCompletionRecord(workItem);
             }
 
             workItem.Name = item.Name;

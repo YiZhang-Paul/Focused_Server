@@ -63,9 +63,13 @@ namespace Service.Utilities
             };
         }
 
-        public static CompletionRecord GetCompletionRecord(WorkItem item)
+        public static void AddCompletionRecord(WorkItem item)
         {
-            var record = new CompletionRecord { Time = DateTime.Now };
+            var record = new CompletionRecord
+            {
+                Time = DateTime.Now,
+                IsPastDue = item.CompletionRecords.Any(_ => _.IsPastDue)
+            };
 
             if (item.Type == WorkItemType.Interruption)
             {
@@ -77,7 +81,7 @@ namespace Service.Utilities
                 record.IsPastDue = item.DueDate != null && record.Time > item.DueDate;
             }
 
-            return record;
+            item.CompletionRecords.Add(record);
         }
     }
 }
