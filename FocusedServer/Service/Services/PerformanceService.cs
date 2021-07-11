@@ -1,4 +1,5 @@
 using Core.Dtos;
+using Core.Enums;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Models.Generic;
@@ -135,15 +136,18 @@ namespace Service.Services
         {
             var endDate = end ?? DateTime.Now;
             var startDate = start ?? endDate.AddDays(-DefaultPeriod);
+            var workItems = await WorkItemService.GetWorkItemsByDateRange(userId, startDate, endDate).ConfigureAwait(false);
             var progresses = await WorkItemService.GetWorkItemOverallProgressionByDateRange(userId, startDate, endDate).ConfigureAwait(false);
             var breakdowns = await GetActivityBreakdownByDays(userId, startDate, endDate).ConfigureAwait(false);
             var durations = breakdowns.Select(_ => _.Regular + _.Recurring + _.Overlearning).ToList();
 
             return new PerformanceRating
             {
+                Determination = (double)durations.Count(_ => _ >= DailyTarget) / durations.Count,
                 Estimation = PerformanceRatingUtility.GetEstimationRating(progresses),
-                Sustainability = PerformanceRatingUtility.GetSustainabilityRating(durations),
-                Determination = (double)durations.Count(_ => _ >= DailyTarget) / durations.Count
+                Planning = PerformanceRatingUtility.GetPlanningRating(workItems),
+                Adaptability = PerformanceRatingUtility.GetAdaptabilityRating(workItems),
+                Sustainability = PerformanceRatingUtility.GetSustainabilityRating(durations)
             };
         }
     }
