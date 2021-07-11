@@ -44,6 +44,7 @@ namespace WebApi
             services.AddScoped<IFocusSessionService, FocusSessionService>();
             services.AddScoped<IBreakSessionService, BreakSessionService>();
             services.AddScoped<IPerformanceService, PerformanceService>();
+            services.AddScoped<IUserProfileService, UserProfileService>();
             services.Configure<DatabaseConfiguration>(Configuration.GetSection(DatabaseConfiguration.Key));
             CustomBsonSerializers.Register();
         }
