@@ -35,7 +35,7 @@ namespace Service.Utilities
             var average = durations.Average();
             var variance = durations.Average(_ => Math.Pow(_ - average, 2));
 
-            return 1 - Math.Sqrt(variance) / average;
+            return average / (average + Math.Sqrt(variance));
         }
     }
 }
