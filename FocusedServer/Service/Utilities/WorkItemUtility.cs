@@ -2,6 +2,7 @@ using Core.Dtos;
 using Core.Enums;
 using Core.Models.Aggregates;
 using Core.Models.Generic;
+using Core.Models.WorkItem;
 using System;
 using System.Linq;
 
@@ -60,6 +61,23 @@ namespace Service.Utilities
                     IsCompleted = item.Checklist.All(_ => _.IsCompleted)
                 }
             };
+        }
+
+        public static CompletionRecord GetCompletionRecord(WorkItem item)
+        {
+            var record = new CompletionRecord { Time = DateTime.Now };
+
+            if (item.Type == WorkItemType.Interruption)
+            {
+                // interruption must be handled on the same day of creation
+                record.IsPastDue = record.Time > item.TimeInfo.Created.AddDays(1).Date;
+            }
+            else if (item.Type == WorkItemType.Regular)
+            {
+                record.IsPastDue = item.DueDate != null && record.Time > item.DueDate;
+            }
+
+            return record;
         }
     }
 }

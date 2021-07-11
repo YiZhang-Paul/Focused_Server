@@ -4,6 +4,7 @@ using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Models.TimeSession;
 using Core.Models.WorkItem;
+using Service.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -97,6 +98,11 @@ namespace Service.Services
             series.EndTime = DateTime.Now;
             item.Status = targetStatus;
 
+            if (targetStatus == WorkItemStatus.Completed)
+            {
+                item.CompletionRecords.Add(WorkItemUtility.GetCompletionRecord(item));
+            }
+
             return await TimeSeriesRepository.Replace(series).ConfigureAwait(false) != null && await UpdateWorkItem(item).ConfigureAwait(false) != null;
         }
 
@@ -107,6 +113,11 @@ namespace Service.Services
             if (workItem == null)
             {
                 return null;
+            }
+
+            if (workItem.Status != item.Status && item.Status == WorkItemStatus.Completed)
+            {
+                workItem.CompletionRecords.Add(WorkItemUtility.GetCompletionRecord(workItem));
             }
 
             workItem.Name = item.Name;
