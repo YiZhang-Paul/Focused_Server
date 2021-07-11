@@ -367,7 +367,7 @@ namespace Services.Test.IntegrationTests.Repositories
 
             await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            Assert.AreEqual(0, await SubjectUnderTest.GetPastDueWorkItemsCount("user_id", start, end).ConfigureAwait(false));
+            Assert.AreEqual(0, await SubjectUnderTest.GetUncompletedPastDueWorkItemsCount("user_id", start, end).ConfigureAwait(false));
         }
 
         [Test]
@@ -386,7 +386,7 @@ namespace Services.Test.IntegrationTests.Repositories
 
             await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            Assert.AreEqual(2, await SubjectUnderTest.GetPastDueWorkItemsCount("user_id", start, end).ConfigureAwait(false));
+            Assert.AreEqual(2, await SubjectUnderTest.GetUncompletedPastDueWorkItemsCount("user_id", start, end).ConfigureAwait(false));
         }
 
         [Test]

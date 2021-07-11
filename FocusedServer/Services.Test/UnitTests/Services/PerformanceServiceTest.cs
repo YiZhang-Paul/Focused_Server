@@ -309,7 +309,7 @@ namespace Services.Test.UnitTests.Services
         {
             var start = new DateTime(2021, 1, 1);
             var end = new DateTime(2021, 1, 10);
-            WorkItemRepository.Setup(_ => _.GetPastDueWorkItemsCount(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(3);
+            WorkItemRepository.Setup(_ => _.GetUncompletedPastDueWorkItemsCount(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(3);
             WorkItemRepository.Setup(_ => _.GetLoomingWorkItemsCount(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(2);
 
             var result = await SubjectUnderTest.GetDueDateBreakdownByDateRange("user_id", start, end).ConfigureAwait(false);
@@ -321,12 +321,12 @@ namespace Services.Test.UnitTests.Services
         [Test]
         public async Task GetDueDateBreakdownByDateRangeShouldDefaultToPastTwoWeeks()
         {
-            WorkItemRepository.Setup(_ => _.GetPastDueWorkItemsCount(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(3);
+            WorkItemRepository.Setup(_ => _.GetUncompletedPastDueWorkItemsCount(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(3);
             WorkItemRepository.Setup(_ => _.GetLoomingWorkItemsCount(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(2);
 
             await SubjectUnderTest.GetDueDateBreakdownByDateRange("user_id", null, null).ConfigureAwait(false);
 
-            WorkItemRepository.Verify(_ => _.GetPastDueWorkItemsCount
+            WorkItemRepository.Verify(_ => _.GetUncompletedPastDueWorkItemsCount
             (
                 It.IsAny<string>(),
                 It.Is<DateTime>(date => (DateTime.Now.AddDays(-14) - date).TotalSeconds < 3),

@@ -55,7 +55,7 @@ namespace Service.Repositories
             return items.Select(_ => WorkItemUtility.ToWorkItemDto(_)).ToList();
         }
 
-        public async Task<long> GetPastDueWorkItemsCount(string userId, DateTime start, DateTime end)
+        public async Task<long> GetUncompletedPastDueWorkItemsCount(string userId, DateTime start, DateTime end)
         {
             var builder = Builders<WorkItem>.Filter;
 

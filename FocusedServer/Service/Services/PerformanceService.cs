@@ -126,7 +126,7 @@ namespace Service.Services
 
             return new DueDateBreakdownDto
             {
-                PastDue = (int)await WorkItemRepository.GetPastDueWorkItemsCount(userId, startDate, endDate).ConfigureAwait(false),
+                PastDue = (int)await WorkItemRepository.GetUncompletedPastDueWorkItemsCount(userId, startDate, endDate).ConfigureAwait(false),
                 Looming = (int)await WorkItemRepository.GetLoomingWorkItemsCount(userId, startDate, endDate.AddDays(1)).ConfigureAwait(false)
             };
         }
