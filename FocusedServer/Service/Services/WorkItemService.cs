@@ -134,6 +134,13 @@ namespace Service.Services
             return await WorkItemRepository.GetWorkItemMeta(item.UserId, item.Id).ConfigureAwait(false);
         }
 
+        public async Task<List<WorkItem>> GetWorkItemsByDateRange(string userId, DateTime start, DateTime end)
+        {
+            var ids = await TimeSeriesRepository.GetDataSourceIdsByDateRange(userId, start, end, TimeSeriesType.WorkItem).ConfigureAwait(false);
+
+            return await WorkItemRepository.Get(userId, ids).ConfigureAwait(false);
+        }
+
         public async Task<ActivityBreakdownDto> GetWorkItemActivityBreakdownByDateRange(string userId, DateTime start, DateTime end)
         {
             var progress = await GetWorkItemCurrentProgressionByDateRange(userId, start, end).ConfigureAwait(false);
