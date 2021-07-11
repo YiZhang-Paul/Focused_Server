@@ -27,6 +27,27 @@ namespace Service.Utilities
             return progress.Target > 0.5 && remaining / progress.Target >= 0.6;
         }
 
+        public static bool IsPastDue(WorkItem item)
+        {
+            if (item.CompletionRecords.Any(_ => _.IsPastDue))
+            {
+                return true;
+            }
+
+            if (item.Type == WorkItemType.Interruption)
+            {
+                // interruption must be handled on the same day of creation
+                return DateTime.Now > item.TimeInfo.Created.AddDays(1).Date;
+            }
+
+            if (item.Type == WorkItemType.Regular)
+            {
+                return item.DueDate != null && DateTime.Now > item.DueDate;
+            }
+
+            return false;
+        }
+
         public static WorkItemDto ToWorkItemDto(WorkItemWithTimeSeries item, DateTime? start = null, DateTime? end = null)
         {
             var startTime = start ?? item.TimeInfo.Created;
@@ -61,27 +82,6 @@ namespace Service.Utilities
                     IsCompleted = item.Checklist.All(_ => _.IsCompleted)
                 }
             };
-        }
-
-        public static void AddCompletionRecord(WorkItem item)
-        {
-            var record = new CompletionRecord
-            {
-                Time = DateTime.Now,
-                IsPastDue = item.CompletionRecords.Any(_ => _.IsPastDue)
-            };
-
-            if (item.Type == WorkItemType.Interruption)
-            {
-                // interruption must be handled on the same day of creation
-                record.IsPastDue = record.Time > item.TimeInfo.Created.AddDays(1).Date;
-            }
-            else if (item.Type == WorkItemType.Regular)
-            {
-                record.IsPastDue = item.DueDate != null && record.Time > item.DueDate;
-            }
-
-            item.CompletionRecords.Add(record);
         }
     }
 }

@@ -100,7 +100,7 @@ namespace Service.Services
 
             if (targetStatus == WorkItemStatus.Completed)
             {
-                WorkItemUtility.AddCompletionRecord(item);
+                item.CompletionRecords.Add(new CompletionRecord { IsPastDue = WorkItemUtility.IsPastDue(item) });
             }
 
             return await TimeSeriesRepository.Replace(series).ConfigureAwait(false) != null && await UpdateWorkItem(item).ConfigureAwait(false) != null;
@@ -117,7 +117,7 @@ namespace Service.Services
 
             if (workItem.Status != item.Status && item.Status == WorkItemStatus.Completed)
             {
-                WorkItemUtility.AddCompletionRecord(workItem);
+                workItem.CompletionRecords.Add(new CompletionRecord { IsPastDue = WorkItemUtility.IsPastDue(workItem) });
             }
 
             workItem.Name = item.Name;
