@@ -1,4 +1,5 @@
 using Core.Models;
+using MongoDB.Bson;
 using NUnit.Framework;
 using Service.Repositories.RepositoryBase;
 using System.Threading.Tasks;
@@ -14,6 +15,14 @@ namespace Services.Test.IntegrationTests.Repositories
         public void Setup()
         {
             SubjectUnderTest = new GenericRecordRepository<DatabaseEntry>(ConfigurationUtility.GetDatabaseConfiguration(), typeof(DatabaseEntry).Name);
+        }
+
+        [Test]
+        public async Task ReplaceShouldReturnNullWhenNoDocumentIsReplaced()
+        {
+            var document = new DatabaseEntry { Id = ObjectId.GenerateNewId().ToString() };
+
+            Assert.IsNull(await SubjectUnderTest.Replace(document).ConfigureAwait(false));
         }
 
         [Test]

@@ -4,6 +4,7 @@ using Core.Interfaces.Repositories;
 using Core.Models.Generic;
 using Core.Models.TimeSession;
 using Core.Models.WorkItem;
+using MongoDB.Bson;
 using Moq;
 using NUnit.Framework;
 using Service.Services;
@@ -190,6 +191,24 @@ namespace Services.Test.UnitTests.Services
         }
 
         [Test]
+        public async Task StopWorkItemShouldAddCompletionRecordOnComplete()
+        {
+            var items = new List<WorkItem> { new WorkItem { Id = "id_1", CompletionRecords = new List<CompletionRecord>() } };
+            var series = new List<TimeSeries> { new TimeSeries { EndTime = null } };
+            WorkItemRepository.Setup(_ => _.GetWorkItems(It.IsAny<string>(), It.IsAny<WorkItemStatus>())).ReturnsAsync(items);
+            WorkItemRepository.Setup(_ => _.Replace(It.IsAny<WorkItem>())).ReturnsAsync(items.Last());
+            TimeSeriesRepository.Setup(_ => _.GetTimeSeriesByDataSource(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(series);
+            TimeSeriesRepository.Setup(_ => _.Replace(It.IsAny<TimeSeries>())).ReturnsAsync(series.Last());
+
+            await SubjectUnderTest.StopWorkItem("user_id", WorkItemStatus.Completed).ConfigureAwait(false);
+
+            WorkItemRepository.Verify(_ => _.Replace(It.Is<WorkItem>
+            (
+                item => item.CompletionRecords.Count == 1 && (DateTime.Now - item.CompletionRecords[0].Time).TotalSeconds < 3
+            )), Times.Once);
+        }
+
+        [Test]
         public async Task UpdateWorkItemMetaShouldReturnNullWhenWorkItemDoesNotExist()
         {
             var meta = new WorkItemDto { Id = "item_id", UserId = "user_id" };
@@ -250,6 +269,35 @@ namespace Services.Test.UnitTests.Services
         }
 
         [Test]
+        public async Task UpdateWorkItemMetaShouldAddCompletionRecordOnComplete()
+        {
+            var meta = new WorkItemDto { Status = WorkItemStatus.Completed };
+            var item = new WorkItem { Status = WorkItemStatus.Highlighted, CompletionRecords = new List<CompletionRecord>() };
+            WorkItemRepository.Setup(_ => _.Get(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(item);
+            WorkItemRepository.Setup(_ => _.Replace(It.IsAny<WorkItem>())).ReturnsAsync(item);
+
+            await SubjectUnderTest.UpdateWorkItemMeta(meta).ConfigureAwait(false);
+
+            WorkItemRepository.Verify(_ => _.Replace(It.Is<WorkItem>
+            (
+                item => item.CompletionRecords.Count == 1 && (DateTime.Now - item.CompletionRecords[0].Time).TotalSeconds < 3
+            )), Times.Once);
+        }
+
+        [Test]
+        public async Task GetWorkItemsByDateRangeShouldReturnWorkItemsFound()
+        {
+            var ids = new List<string> { ObjectId.GenerateNewId().ToString(), ObjectId.GenerateNewId().ToString() };
+            var items = new List<WorkItem> { new WorkItem(), new WorkItem() };
+            TimeSeriesRepository.Setup(_ => _.GetDataSourceIdsByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<TimeSeriesType>())).ReturnsAsync(ids);
+            WorkItemRepository.Setup(_ => _.Get(It.IsAny<string>(), It.IsAny<List<string>>())).ReturnsAsync(items);
+
+            var result = await SubjectUnderTest.GetWorkItemsByDateRange("user_id", new DateTime(), new DateTime()).ConfigureAwait(false);
+
+            CollectionAssert.AreEqual(items, result);
+        }
+
+        [Test]
         public async Task GetWorkItemActivityBreakdownByDateRangeShouldReturnActivityBreakdown()
         {
             var progression = new List<WorkItemProgressionDto>
@@ -272,6 +320,44 @@ namespace Services.Test.UnitTests.Services
             Assert.AreEqual(3, result.Recurring);
             Assert.AreEqual(2, result.Interruption);
             Assert.AreEqual(0, result.Overlearning);
+        }
+
+        [Test]
+        public async Task GetWorkItemOverallProgressionByDateRangeShouldReturnOverallProgression()
+        {
+            var progression = new List<WorkItemProgressionDto>
+            {
+                new WorkItemProgressionDto { Type = WorkItemType.Regular, Progress = new ProgressionCounter<double> { Current = 5 } },
+                new WorkItemProgressionDto { Type = WorkItemType.Recurring, Progress = new ProgressionCounter<double> { Current = 3 } },
+                new WorkItemProgressionDto { Type = WorkItemType.Interruption, Progress = new ProgressionCounter<double> { Current = 2 } },
+                new WorkItemProgressionDto { Type = WorkItemType.Regular, Progress = new ProgressionCounter<double> { Current = 4 } }
+            };
+
+            var ids = new List<string> { "item_id" };
+            var start = new DateTime(2021, 1, 1);
+            var end = new DateTime(2021, 1, 2);
+            TimeSeriesRepository.Setup(_ => _.GetDataSourceIdsByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<TimeSeriesType>())).ReturnsAsync(ids);
+            WorkItemRepository.Setup(_ => _.GetWorkItemProgressionByDateRange(It.IsAny<string>(), It.IsAny<List<string>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(progression);
+
+            var result = await SubjectUnderTest.GetWorkItemOverallProgressionByDateRange("user_id", start, end).ConfigureAwait(false);
+
+            CollectionAssert.AreEqual(progression, result);
+
+            TimeSeriesRepository.Verify(_ => _.GetDataSourceIdsByDateRange
+            (
+                It.IsAny<string>(),
+                It.Is<DateTime>(date => date == start),
+                It.Is<DateTime>(date => date == end),
+                It.IsAny<TimeSeriesType>()
+            ), Times.Once);
+
+            WorkItemRepository.Verify(_ => _.GetWorkItemProgressionByDateRange
+            (
+                It.IsAny<string>(),
+                It.IsAny<List<string>>(),
+                It.Is<DateTime>(date => date == new DateTime(1970, 1, 1)),
+                It.Is<DateTime>(date => date == end)
+            ), Times.Once);
         }
     }
 }

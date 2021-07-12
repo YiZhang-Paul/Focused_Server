@@ -17,6 +17,12 @@ namespace Service.Services
         public async Task<PerformanceRating> UpdateUserRatings(string id, PerformanceRating ratings)
         {
             var user = await UserProfileRepository.Get(id).ConfigureAwait(false);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             user.Ratings = ratings;
 
             return (await UserProfileRepository.Replace(user).ConfigureAwait(false))?.Ratings;

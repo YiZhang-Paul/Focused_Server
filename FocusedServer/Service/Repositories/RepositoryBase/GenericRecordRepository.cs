@@ -30,7 +30,7 @@ namespace Service.Repositories.RepositoryBase
             var filter = Builders<T>.Filter.Eq(_ => _.Id, document.Id);
             var result = await Collection.ReplaceOneAsync(filter, document).ConfigureAwait(false);
 
-            return result.IsAcknowledged ? document : null;
+            return result.IsAcknowledged && result.MatchedCount == 1 ? document : null;
         }
     }
 }

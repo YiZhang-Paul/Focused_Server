@@ -65,7 +65,7 @@ namespace Service.Repositories.RepositoryBase
             var filter = builder.Eq(_ => _.UserId, document.UserId) & builder.Eq(_ => _.Id, document.Id);
             var result = await Collection.ReplaceOneAsync(filter, document).ConfigureAwait(false);
 
-            return result.IsAcknowledged ? document : null;
+            return result.IsAcknowledged && result.MatchedCount == 1 ? document : null;
         }
 
         public async Task<bool> Delete(string userId, string id)

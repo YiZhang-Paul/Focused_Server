@@ -146,6 +146,14 @@ namespace Services.Test.IntegrationTests.Repositories
         }
 
         [Test]
+        public async Task ReplaceShouldReturnNullWhenNoRecordIsReplaced()
+        {
+            var record = new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id" };
+
+            Assert.IsNull(await SubjectUnderTest.Replace(record).ConfigureAwait(false));
+        }
+
+        [Test]
         public async Task ReplaceShouldReturnReplacedRecordOnSuccess()
         {
             var record = new UserOwnedRecord { UserId = "user_id" };
