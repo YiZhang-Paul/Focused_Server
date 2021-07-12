@@ -9,11 +9,23 @@ namespace Service.Services
 {
     public class BreakSessionService : IBreakSessionService
     {
+        private IFocusSessionRepository FocusSessionRepository { get; set; }
         private IBreakSessionRepository BreakSessionRepository { get; set; }
 
-        public BreakSessionService(IBreakSessionRepository breakSessionRepository)
+        public BreakSessionService(IFocusSessionRepository focusSessionRepository, IBreakSessionRepository breakSessionRepository)
         {
+            FocusSessionRepository = focusSessionRepository;
             BreakSessionRepository = breakSessionRepository;
+        }
+
+        public async Task<BreakSession> GetOpenBreakSession(string userId, bool isStale)
+        {
+            if (isStale)
+            {
+                return await BreakSessionRepository.GetStaleBreakSession(userId).ConfigureAwait(false);
+            }
+
+            return await BreakSessionRepository.GetUnfinishedBreakSession(userId).ConfigureAwait(false);
         }
 
         public async Task<double> GetBreakDurationByDateRange(string userId, DateTime start, DateTime end)
@@ -30,9 +42,9 @@ namespace Service.Services
                 return false;
             }
 
-            var focusSession = await BreakSessionRepository.Get(userId, option.FocusSessionId).ConfigureAwait(false);
+            var focusSession = await FocusSessionRepository.Get(userId, option.FocusSessionId).ConfigureAwait(false);
 
-            if (focusSession?.EndTime == null || await BreakSessionRepository.GetActiveBreakSession(userId).ConfigureAwait(false) != null)
+            if (focusSession?.EndTime == null || await BreakSessionRepository.GetUnfinishedBreakSession(userId).ConfigureAwait(false) != null)
             {
                 return false;
             }
@@ -48,6 +60,20 @@ namespace Service.Services
             var id = await BreakSessionRepository.Add(session).ConfigureAwait(false);
 
             return !string.IsNullOrWhiteSpace(id);
+        }
+
+        public async Task<bool> StopBreakSession(string userId, string id)
+        {
+            var session = await BreakSessionRepository.Get(userId, id).ConfigureAwait(false);
+
+            if (session == null)
+            {
+                return false;
+            }
+
+            session.EndTime = session.TargetEndTime < DateTime.Now ? session.TargetEndTime : DateTime.Now;
+
+            return await BreakSessionRepository.Replace(session).ConfigureAwait(false) != null;
         }
     }
 }

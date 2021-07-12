@@ -1,6 +1,7 @@
 using Core.Dtos;
 using Core.Interfaces.Services;
 using Core.Models.Generic;
+using Core.Models.User;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -65,6 +66,13 @@ namespace WebApi.Controllers
         public async Task<DueDateBreakdownDto> GetDueDateBreakdown([FromQuery]DateTime? start, [FromQuery]DateTime? end)
         {
             return await PerformanceService.GetDueDateBreakdownByDateRange(UserId, start, end).ConfigureAwait(false);
+        }
+
+        [HttpGet]
+        [Route("ratings")]
+        public async Task<PerformanceRating> GetPerformanceRating([FromQuery]DateTime? start, [FromQuery]DateTime? end)
+        {
+            return await PerformanceService.GetPerformanceRating(UserId, start, end).ConfigureAwait(false);
         }
     }
 }

@@ -12,12 +12,12 @@ namespace Services.Test.IntegrationTests.Repositories
     [TestFixture]
     public class UserOwnedRecordRepositoryTest
     {
-        private UserOwnedRecordRepository<UserOwnedRecord> _repository;
+        private UserOwnedRecordRepository<UserOwnedRecord> SubjectUnderTest { get; set; }
 
         [OneTimeSetUp]
         public void Setup()
         {
-            _repository = new UserOwnedRecordRepository<UserOwnedRecord>(ConfigurationUtility.GetDatabaseConfiguration(), typeof(UserOwnedRecord).Name);
+            SubjectUnderTest = new UserOwnedRecordRepository<UserOwnedRecord>(ConfigurationUtility.GetDatabaseConfiguration(), typeof(UserOwnedRecord).Name);
         }
 
         [Test]
@@ -30,9 +30,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id_3" }
             };
 
-            await _repository.Add(records).ConfigureAwait(false);
+            await SubjectUnderTest.Add(records).ConfigureAwait(false);
 
-            Assert.IsNull(await _repository.Get("user_id_4", records[2].Id).ConfigureAwait(false));
+            Assert.IsNull(await SubjectUnderTest.Get("user_id_4", records[2].Id).ConfigureAwait(false));
         }
 
         [Test]
@@ -45,11 +45,49 @@ namespace Services.Test.IntegrationTests.Repositories
                 new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id_3" }
             };
 
-            await _repository.Add(records).ConfigureAwait(false);
+            await SubjectUnderTest.Add(records).ConfigureAwait(false);
 
-            var result = await _repository.Get("user_id_2", records[1].Id).ConfigureAwait(false);
+            var result = await SubjectUnderTest.Get("user_id_2", records[1].Id).ConfigureAwait(false);
 
             Assert.AreEqual(records[1].Id, result.Id);
+        }
+
+        [Test]
+        public async Task GetShouldReturnEmptyCollectionWhenNoUserOwnedRecordFound()
+        {
+            var records = new List<UserOwnedRecord>
+            {
+                new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id_1" },
+                new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id_2" },
+                new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id_3" }
+            };
+
+            var ids = new List<string> { ObjectId.GenerateNewId().ToString() };
+            await SubjectUnderTest.Add(records).ConfigureAwait(false);
+
+            var result = await SubjectUnderTest.Get("user_id_4", ids).ConfigureAwait(false);
+
+            Assert.IsFalse(result.Any());
+        }
+
+        [Test]
+        public async Task GetShouldReturnUserOwnedRecordsFound()
+        {
+            var records = new List<UserOwnedRecord>
+            {
+                new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id_1" },
+                new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id_1" },
+                new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id_1" }
+            };
+
+            var ids = new List<string> { records[1].Id, records[2].Id };
+            await SubjectUnderTest.Add(records).ConfigureAwait(false);
+
+            var result = await SubjectUnderTest.Get("user_id_1", ids).ConfigureAwait(false);
+
+            Assert.AreEqual(2, result.Count);
+            Assert.AreEqual(records[1].Id, result[0].Id);
+            Assert.AreEqual(records[2].Id, result[1].Id);
         }
 
         [Test]
@@ -57,7 +95,7 @@ namespace Services.Test.IntegrationTests.Repositories
         {
             var record = new UserOwnedRecord { UserId = " " };
 
-            Assert.ThrowsAsync<ArgumentNullException>(async() => await _repository.Add(record).ConfigureAwait(false));
+            Assert.ThrowsAsync<ArgumentNullException>(async() => await SubjectUnderTest.Add(record).ConfigureAwait(false));
         }
 
         [Test]
@@ -65,7 +103,7 @@ namespace Services.Test.IntegrationTests.Repositories
         {
             var record = new UserOwnedRecord { UserId = "user_id" };
 
-            var result = await _repository.Add(record).ConfigureAwait(false);
+            var result = await SubjectUnderTest.Add(record).ConfigureAwait(false);
 
             Assert.IsFalse(string.IsNullOrWhiteSpace(result));
         }
@@ -80,7 +118,7 @@ namespace Services.Test.IntegrationTests.Repositories
                 new UserOwnedRecord { UserId = "user_id_2" }
             };
 
-            Assert.ThrowsAsync<ArgumentNullException>(async () => await _repository.Add(records).ConfigureAwait(false));
+            Assert.ThrowsAsync<ArgumentNullException>(async () => await SubjectUnderTest.Add(records).ConfigureAwait(false));
         }
 
         [Test]
@@ -93,7 +131,7 @@ namespace Services.Test.IntegrationTests.Repositories
                 new UserOwnedRecord { UserId = "user_id_3" }
             };
 
-            var result = await _repository.Add(records).ConfigureAwait(false);
+            var result = await SubjectUnderTest.Add(records).ConfigureAwait(false);
 
             Assert.AreEqual(3, result.Count);
             Assert.IsTrue(result.All(_ => !string.IsNullOrWhiteSpace(_)));
@@ -104,17 +142,25 @@ namespace Services.Test.IntegrationTests.Repositories
         {
             var record = new UserOwnedRecord { UserId = " " };
 
-            Assert.ThrowsAsync<ArgumentNullException>(async () => await _repository.Replace(record).ConfigureAwait(false));
+            Assert.ThrowsAsync<ArgumentNullException>(async () => await SubjectUnderTest.Replace(record).ConfigureAwait(false));
+        }
+
+        [Test]
+        public async Task ReplaceShouldReturnNullWhenNoRecordIsReplaced()
+        {
+            var record = new UserOwnedRecord { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id" };
+
+            Assert.IsNull(await SubjectUnderTest.Replace(record).ConfigureAwait(false));
         }
 
         [Test]
         public async Task ReplaceShouldReturnReplacedRecordOnSuccess()
         {
             var record = new UserOwnedRecord { UserId = "user_id" };
-            var id = await _repository.Add(record).ConfigureAwait(false);
+            var id = await SubjectUnderTest.Add(record).ConfigureAwait(false);
 
-            await _repository.Replace(record).ConfigureAwait(false);
-            var result = await _repository.Get("user_id", id).ConfigureAwait(false);
+            await SubjectUnderTest.Replace(record).ConfigureAwait(false);
+            var result = await SubjectUnderTest.Get("user_id", id).ConfigureAwait(false);
 
             Assert.AreEqual(id, result.Id);
             Assert.AreEqual("user_id", result.UserId);
@@ -124,18 +170,18 @@ namespace Services.Test.IntegrationTests.Repositories
         public async Task DeleteShouldReturnTrueOnSuccess()
         {
             var record = new UserOwnedRecord { UserId = "user_id" };
-            var id = await _repository.Add(record).ConfigureAwait(false);
-            Assert.IsNotNull(await _repository.Get("user_id", id).ConfigureAwait(false));
+            var id = await SubjectUnderTest.Add(record).ConfigureAwait(false);
+            Assert.IsNotNull(await SubjectUnderTest.Get("user_id", id).ConfigureAwait(false));
 
-            await _repository.Delete("user_id", id).ConfigureAwait(false);
+            await SubjectUnderTest.Delete("user_id", id).ConfigureAwait(false);
 
-            Assert.IsNull(await _repository.Get("user_id", id).ConfigureAwait(false));
+            Assert.IsNull(await SubjectUnderTest.Get("user_id", id).ConfigureAwait(false));
         }
 
         [TearDown]
         public async Task TearDown()
         {
-            await _repository.DropCollection().ConfigureAwait(false);
+            await SubjectUnderTest.DropCollection().ConfigureAwait(false);
         }
     }
 }

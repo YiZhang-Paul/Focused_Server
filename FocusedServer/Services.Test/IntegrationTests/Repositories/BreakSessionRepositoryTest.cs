@@ -12,51 +12,92 @@ namespace Services.Test.IntegrationTests.Repositories
     [TestFixture]
     public class BreakSessionRepositoryTest
     {
-        private BreakSessionRepository _repository;
+        private BreakSessionRepository SubjectUnderTest { get; set; }
 
         [OneTimeSetUp]
         public void Setup()
         {
-            _repository = new BreakSessionRepository(ConfigurationUtility.GetDatabaseConfiguration());
+            SubjectUnderTest = new BreakSessionRepository(ConfigurationUtility.GetDatabaseConfiguration());
         }
 
         [Test]
-        public async Task GetActiveBreakSessionShouldReturnNullWhenNoActiveBreakSessionExist()
+        public async Task GetUnfinishedBreakSessionShouldReturnNullWhenNoUnfinishedBreakSessionExist()
         {
             var sessions = new List<BreakSession>
             {
                 new BreakSession { UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), EndTime = DateTime.Now.AddHours(-1) }
             };
 
-            await _repository.Add(sessions).ConfigureAwait(false);
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            Assert.IsNull(await _repository.GetActiveBreakSession("user_id").ConfigureAwait(false));
+            Assert.IsNull(await SubjectUnderTest.GetUnfinishedBreakSession("user_id").ConfigureAwait(false));
         }
 
         [Test]
-        public async Task GetActiveBreakSessionShouldReturnNullWhenActiveBreakSessionAlreadyEnded()
+        public async Task GetUnfinishedBreakSessionShouldReturnNullWhenUnfinishedBreakSessionAlreadyEnded()
         {
             var sessions = new List<BreakSession>
             {
                 new BreakSession { UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), TargetDuration = 1.5 }
             };
 
-            await _repository.Add(sessions).ConfigureAwait(false);
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            Assert.IsNull(await _repository.GetActiveBreakSession("user_id").ConfigureAwait(false));
+            Assert.IsNull(await SubjectUnderTest.GetUnfinishedBreakSession("user_id").ConfigureAwait(false));
         }
 
         [Test]
-        public async Task GetActiveBreakSessionShouldReturnActiveBreakSessionFound()
+        public async Task GetUnfinishedBreakSessionShouldReturnUnfinishedBreakSessionFound()
         {
             var sessions = new List<BreakSession>
             {
                 new BreakSession { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), TargetDuration = 2.5 }
             };
 
-            await _repository.Add(sessions).ConfigureAwait(false);
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            var result = await _repository.GetActiveBreakSession("user_id").ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetUnfinishedBreakSession("user_id").ConfigureAwait(false);
+
+            Assert.AreEqual(sessions[0].Id, result.Id);
+        }
+
+        [Test]
+        public async Task GetStaleBreakSessionShouldReturnNullWhenNoStaleBreakSessionExist()
+        {
+            var sessions = new List<BreakSession>
+            {
+                new BreakSession { UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), EndTime = DateTime.Now.AddHours(-1) }
+            };
+
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
+
+            Assert.IsNull(await SubjectUnderTest.GetStaleBreakSession("user_id").ConfigureAwait(false));
+        }
+
+        [Test]
+        public async Task GetStaleBreakSessionShouldReturnNullWhenOpenBreakSessionIsNotEndedYet()
+        {
+            var sessions = new List<BreakSession>
+            {
+                new BreakSession { UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), TargetDuration = 2.5 }
+            };
+
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
+
+            Assert.IsNull(await SubjectUnderTest.GetStaleBreakSession("user_id").ConfigureAwait(false));
+        }
+
+        [Test]
+        public async Task GetStaleBreakSessionShouldReturnStaleBreakSessionFound()
+        {
+            var sessions = new List<BreakSession>
+            {
+                new BreakSession { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), TargetDuration = 2 }
+            };
+
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
+
+            var result = await SubjectUnderTest.GetStaleBreakSession("user_id").ConfigureAwait(false);
 
             Assert.AreEqual(sessions[0].Id, result.Id);
         }
@@ -74,9 +115,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new BreakSession { UserId = "user_id", StartTime = new DateTime(2021, 1, 1, 15, 55, 0), EndTime = new DateTime(2021, 1, 1, 16, 15, 0) }
             };
 
-            await _repository.Add(sessions).ConfigureAwait(false);
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            var result = await _repository.GetBreakSessionByDateRange("user_id", start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetBreakSessionByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.IsFalse(result.Any());
         }
@@ -103,9 +144,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 }
             };
 
-            await _repository.Add(sessions).ConfigureAwait(false);
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            var result = await _repository.GetBreakSessionByDateRange("user_id", start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetBreakSessionByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.AreEqual(1, result.Count);
             Assert.AreEqual(sessions[1].Id, result[0].Id);
@@ -141,9 +182,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 }
             };
 
-            await _repository.Add(sessions).ConfigureAwait(false);
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            var result = await _repository.GetBreakSessionByDateRange("user_id", start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetBreakSessionByDateRange("user_id", start, end).ConfigureAwait(false);
 
             Assert.AreEqual(3, result.Count);
             Assert.AreEqual(sessions[1].Id, result[0].Id);
@@ -154,7 +195,7 @@ namespace Services.Test.IntegrationTests.Repositories
         [TearDown]
         public async Task TearDown()
         {
-            await _repository.DropCollection().ConfigureAwait(false);
+            await SubjectUnderTest.DropCollection().ConfigureAwait(false);
         }
     }
 }

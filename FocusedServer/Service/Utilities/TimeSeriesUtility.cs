@@ -13,7 +13,7 @@ namespace Service.Utilities
             {
                 _.EndTime ??= DateTime.Now < end ? DateTime.Now : end;
                 var rangeStart = start > _.StartTime ? start : _.StartTime;
-                var rangeEnd = end < _.EndTime ? end : _.EndTime.Value;
+                var rangeEnd = end < _.EndTime.Value ? end : _.EndTime.Value;
 
                 return Math.Max(0, (rangeEnd - rangeStart).TotalHours);
             });

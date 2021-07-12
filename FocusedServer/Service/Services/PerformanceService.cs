@@ -2,6 +2,8 @@ using Core.Dtos;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Models.Generic;
+using Core.Models.User;
+using Service.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -79,7 +81,7 @@ namespace Service.Services
 
         public async Task<ActivityBreakdownDto> GetActivityBreakdownByDateRange(string userId, DateTime? start, DateTime? end)
         {
-            var endDate = end ?? DateTime.UtcNow;
+            var endDate = end ?? DateTime.Now;
             var startDate = start ?? endDate.AddDays(-DefaultPeriod);
             var progress = await WorkItemService.GetWorkItemActivityBreakdownByDateRange(userId, startDate, endDate).ConfigureAwait(false);
             progress.Overlearning = await FocusSessionService.GetOverlearningHoursByDateRange(userId, startDate, endDate).ConfigureAwait(false);
@@ -89,10 +91,10 @@ namespace Service.Services
 
         public async Task<EstimationBreakdownDto> GetEstimationBreakdownByDateRange(string userId, DateTime? start, DateTime? end)
         {
-            var endDate = end ?? DateTime.UtcNow;
+            var endDate = end ?? DateTime.Now;
             var startDate = start ?? endDate.AddDays(-DefaultPeriod);
-            var currentProgresses = await WorkItemService.GetWorkItemProgressionByDateRange(userId, startDate, endDate).ConfigureAwait(false);
-            var overallProgresses = await WorkItemService.GetWorkItemProgressionByDateRange(userId, new DateTime(1970, 1, 1), endDate).ConfigureAwait(false);
+            var currentProgresses = await WorkItemService.GetWorkItemCurrentProgressionByDateRange(userId, startDate, endDate).ConfigureAwait(false);
+            var overallProgresses = await WorkItemService.GetWorkItemOverallProgressionByDateRange(userId, startDate, endDate).ConfigureAwait(false);
             var overallLookup = overallProgresses.ToDictionary(_ => _.Id);
             var breakdown = new EstimationBreakdownDto();
 
@@ -110,11 +112,8 @@ namespace Service.Services
                     continue;
                 }
 
-                var remaining = overallProgress.Target - overallProgress.Current;
-                var remainingPercentage = remaining / overallProgress.Target;
-                var isOverestimate = remaining > 3 || (overallProgress.Target > 0.5 && remainingPercentage >= 0.6);
                 breakdown.Normal += currentProgress.Current;
-                breakdown.Overestimate += overallProgress.IsCompleted && isOverestimate ? remaining : 0;
+                breakdown.Overestimate += WorkItemUtility.IsOverestimated(overallProgress) ? overallProgress.Target - overallProgress.Current : 0;
             }
 
             return breakdown;
@@ -122,13 +121,32 @@ namespace Service.Services
 
         public async Task<DueDateBreakdownDto> GetDueDateBreakdownByDateRange(string userId, DateTime? start, DateTime? end)
         {
-            var endDate = end ?? DateTime.UtcNow;
-            var startDate = start ?? endDate.AddDays(-DefaultPeriod);
+            var endDate = end ?? DateTime.Now;
+            var startDate = start ?? new DateTime(1970, 1, 1);
 
             return new DueDateBreakdownDto
             {
-                PastDue = (int)await WorkItemRepository.GetPastDueWorkItemsCount(userId, startDate, endDate).ConfigureAwait(false),
+                PastDue = (int)await WorkItemRepository.GetUncompletedPastDueWorkItemsCount(userId, startDate, endDate).ConfigureAwait(false),
                 Looming = (int)await WorkItemRepository.GetLoomingWorkItemsCount(userId, startDate, endDate.AddDays(1)).ConfigureAwait(false)
+            };
+        }
+
+        public async Task<PerformanceRating> GetPerformanceRating(string userId, DateTime? start, DateTime? end)
+        {
+            var endDate = end ?? DateTime.Now;
+            var startDate = start ?? endDate.AddDays(-DefaultPeriod);
+            var workItems = await WorkItemService.GetWorkItemsByDateRange(userId, startDate, endDate).ConfigureAwait(false);
+            var progresses = await WorkItemService.GetWorkItemOverallProgressionByDateRange(userId, startDate, endDate).ConfigureAwait(false);
+            var breakdowns = await GetActivityBreakdownByDays(userId, startDate, endDate).ConfigureAwait(false);
+            var durations = breakdowns.Select(_ => _.Regular + _.Recurring + _.Overlearning).ToList();
+
+            return new PerformanceRating
+            {
+                Determination = (double)durations.Count(_ => _ >= DailyTarget) / durations.Count,
+                Estimation = PerformanceRatingUtility.GetEstimationRating(progresses),
+                Planning = PerformanceRatingUtility.GetPlanningRating(workItems),
+                Adaptability = PerformanceRatingUtility.GetAdaptabilityRating(workItems),
+                Sustainability = PerformanceRatingUtility.GetSustainabilityRating(durations)
             };
         }
     }

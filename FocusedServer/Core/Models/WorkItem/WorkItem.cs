@@ -19,6 +19,7 @@ namespace Core.Models.WorkItem
         public DateTime? DueDate { get; set; }
         public bool[] Recur { get; set; } = new bool[7];
         public List<ChecklistEntry> Checklist { get; set; } = new List<ChecklistEntry>();
+        public List<CompletionRecord> CompletionRecords { get; set; } = new List<CompletionRecord>();
         public TimeInfo TimeInfo { get; set; } = new TimeInfo();
     }
 }

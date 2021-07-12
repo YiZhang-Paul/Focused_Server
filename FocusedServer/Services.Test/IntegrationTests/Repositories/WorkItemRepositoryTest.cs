@@ -15,15 +15,15 @@ namespace Services.Test.IntegrationTests.Repositories
     [TestFixture]
     public class WorkItemRepositoryTest
     {
-        private TimeSeriesRepository _timeSeriesRepository;
-        private WorkItemRepository _repository;
+        private TimeSeriesRepository TimeSeriesRepository { get; set; }
+        private WorkItemRepository SubjectUnderTest { get; set; }
 
         [OneTimeSetUp]
         public void Setup()
         {
             var configuration = ConfigurationUtility.GetDatabaseConfiguration();
-            _timeSeriesRepository = new TimeSeriesRepository(configuration);
-            _repository = new WorkItemRepository(configuration);
+            TimeSeriesRepository = new TimeSeriesRepository(configuration);
+            SubjectUnderTest = new WorkItemRepository(configuration);
         }
 
         [Test]
@@ -36,9 +36,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new WorkItem { UserId = "user_id", Status = WorkItemStatus.Ongoing }
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItems("user_id", WorkItemStatus.Idle).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItems("user_id", WorkItemStatus.Idle).ConfigureAwait(false);
 
             Assert.IsFalse(result.Any());
         }
@@ -54,9 +54,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new WorkItem { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", Status = WorkItemStatus.Idle }
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItems("user_id", WorkItemStatus.Highlighted).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItems("user_id", WorkItemStatus.Highlighted).ConfigureAwait(false);
 
             Assert.AreEqual(2, result.Count);
             Assert.AreEqual(items[0].Id, result[0].Id);
@@ -88,9 +88,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 }
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            Assert.IsNull(await _repository.GetWorkItemMeta("user_id", ObjectId.GenerateNewId().ToString()).ConfigureAwait(false));
+            Assert.IsNull(await SubjectUnderTest.GetWorkItemMeta("user_id", ObjectId.GenerateNewId().ToString()).ConfigureAwait(false));
         }
 
         [Test]
@@ -125,10 +125,10 @@ namespace Services.Test.IntegrationTests.Repositories
                 new TimeSeries { UserId = "user_id", DataSourceId = items[1].Id, StartTime = new DateTime(2021, 1, 2, 19, 0, 0), EndTime = new DateTime(2021, 1, 2, 20, 0, 0) }
             };
 
-            await _timeSeriesRepository.Add(series).ConfigureAwait(false);
-            await _repository.Add(items).ConfigureAwait(false);
+            await TimeSeriesRepository.Add(series).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItemMeta("user_id", items[1].Id).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItemMeta("user_id", items[1].Id).ConfigureAwait(false);
 
             Assert.AreEqual(items[1].Id, result.Id);
             Assert.AreEqual(2, result.ItemProgress.Current);
@@ -151,9 +151,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 ObjectId.GenerateNewId().ToString()
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItemMetas("user_id", ids).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItemMetas("user_id", ids).ConfigureAwait(false);
 
             Assert.IsFalse(result.Any());
         }
@@ -170,9 +170,9 @@ namespace Services.Test.IntegrationTests.Repositories
 
             var ids = new List<string> { items[0].Id, items[2].Id };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItemMetas("user_id", ids).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItemMetas("user_id", ids).ConfigureAwait(false);
 
             Assert.AreEqual(2, result.Count);
             Assert.AreEqual(items[0].Id, result[0].Id);
@@ -189,9 +189,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new WorkItem { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id" }
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItemMetas("user_id", new WorkItemQuery { Skip = items.Count }).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItemMetas("user_id", new WorkItemQuery { Skip = items.Count }).ConfigureAwait(false);
 
             Assert.IsFalse(result.Any());
         }
@@ -214,9 +214,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 Limit = 2
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItemMetas("user_id", query).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItemMetas("user_id", query).ConfigureAwait(false);
 
             Assert.AreEqual(2, result.Count);
             Assert.AreEqual(items[2].Id, result[0].Id);
@@ -235,9 +235,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new WorkItem { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", Name = "name_11" }
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItemMetas("user_id", new WorkItemQuery { SearchText = "name_1" }).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItemMetas("user_id", new WorkItemQuery { SearchText = "name_1" }).ConfigureAwait(false);
 
             Assert.AreEqual(2, result.Count);
             Assert.AreEqual(items[0].Id, result[0].Id);
@@ -256,9 +256,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new WorkItem { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", Type = WorkItemType.Recurring }
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItemMetas("user_id", new WorkItemQuery { Type = WorkItemType.Regular }).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItemMetas("user_id", new WorkItemQuery { Type = WorkItemType.Regular }).ConfigureAwait(false);
 
             Assert.AreEqual(2, result.Count);
             Assert.AreEqual(items[0].Id, result[0].Id);
@@ -277,9 +277,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new WorkItem { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", Status = WorkItemStatus.Ongoing }
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItemMetas("user_id", new WorkItemQuery { IsHighlighted = true }).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItemMetas("user_id", new WorkItemQuery { IsHighlighted = true }).ConfigureAwait(false);
 
             Assert.AreEqual(2, result.Count);
             Assert.AreEqual(items[0].Id, result[0].Id);
@@ -298,9 +298,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new WorkItem { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", Status = WorkItemStatus.Ongoing }
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItemMetas("user_id", new WorkItemQuery { IsHighlighted = false }).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItemMetas("user_id", new WorkItemQuery { IsHighlighted = false }).ConfigureAwait(false);
 
             Assert.AreEqual(3, result.Count);
             Assert.AreEqual(items[1].Id, result[0].Id);
@@ -320,9 +320,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new WorkItem { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", Status = WorkItemStatus.Ongoing }
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItemMetas("user_id", new WorkItemQuery { IsCompleted = true }).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItemMetas("user_id", new WorkItemQuery { IsCompleted = true }).ConfigureAwait(false);
 
             Assert.AreEqual(2, result.Count);
             Assert.AreEqual(items[2].Id, result[0].Id);
@@ -341,9 +341,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new WorkItem { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", Status = WorkItemStatus.Ongoing }
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItemMetas("user_id", new WorkItemQuery { IsCompleted = false }).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItemMetas("user_id", new WorkItemQuery { IsCompleted = false }).ConfigureAwait(false);
 
             Assert.AreEqual(3, result.Count);
             Assert.AreEqual(items[0].Id, result[0].Id);
@@ -365,9 +365,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new WorkItem { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", DueDate = DateTime.Now.AddHours(-2.5) }
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            Assert.AreEqual(0, await _repository.GetPastDueWorkItemsCount("user_id", start, end).ConfigureAwait(false));
+            Assert.AreEqual(0, await SubjectUnderTest.GetUncompletedPastDueWorkItemsCount("user_id", start, end).ConfigureAwait(false));
         }
 
         [Test]
@@ -384,9 +384,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new WorkItem { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", DueDate = DateTime.Now.AddHours(-2.5) }
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            Assert.AreEqual(2, await _repository.GetPastDueWorkItemsCount("user_id", start, end).ConfigureAwait(false));
+            Assert.AreEqual(2, await SubjectUnderTest.GetUncompletedPastDueWorkItemsCount("user_id", start, end).ConfigureAwait(false));
         }
 
         [Test]
@@ -403,9 +403,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new WorkItem { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", DueDate = DateTime.Now.AddHours(-2.5) }
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            Assert.AreEqual(0, await _repository.GetLoomingWorkItemsCount("user_id", start, end).ConfigureAwait(false));
+            Assert.AreEqual(0, await SubjectUnderTest.GetLoomingWorkItemsCount("user_id", start, end).ConfigureAwait(false));
         }
 
         [Test]
@@ -422,9 +422,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 new WorkItem { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", DueDate = DateTime.Now.AddHours(-2.5) }
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            Assert.AreEqual(2, await _repository.GetLoomingWorkItemsCount("user_id", start, end).ConfigureAwait(false));
+            Assert.AreEqual(2, await SubjectUnderTest.GetLoomingWorkItemsCount("user_id", start, end).ConfigureAwait(false));
         }
 
         [Test]
@@ -446,9 +446,9 @@ namespace Services.Test.IntegrationTests.Repositories
                 ObjectId.GenerateNewId().ToString()
             };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItemProgressionByDateRange("user_id", ids, start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItemProgressionByDateRange("user_id", ids, start, end).ConfigureAwait(false);
 
             Assert.IsFalse(result.Any());
         }
@@ -468,9 +468,9 @@ namespace Services.Test.IntegrationTests.Repositories
 
             var ids = new List<string> { items[0].Id, items[2].Id };
 
-            await _repository.Add(items).ConfigureAwait(false);
+            await SubjectUnderTest.Add(items).ConfigureAwait(false);
 
-            var result = await _repository.GetWorkItemProgressionByDateRange("user_id", ids, start, end).ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetWorkItemProgressionByDateRange("user_id", ids, start, end).ConfigureAwait(false);
 
             Assert.AreEqual(2, result.Count);
             Assert.AreEqual(items[0].Id, result[0].Id);
@@ -480,8 +480,8 @@ namespace Services.Test.IntegrationTests.Repositories
         [TearDown]
         public async Task TearDown()
         {
-            await _timeSeriesRepository.DropCollection().ConfigureAwait(false);
-            await _repository.DropCollection().ConfigureAwait(false);
+            await TimeSeriesRepository.DropCollection().ConfigureAwait(false);
+            await SubjectUnderTest.DropCollection().ConfigureAwait(false);
         }
     }
 }

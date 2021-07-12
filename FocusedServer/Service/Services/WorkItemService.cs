@@ -4,6 +4,7 @@ using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Models.TimeSession;
 using Core.Models.WorkItem;
+using Service.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,18 +16,11 @@ namespace Service.Services
     {
         private IWorkItemRepository WorkItemRepository { get; set; }
         private ITimeSeriesRepository TimeSeriesRepository { get; set; }
-        private IFocusSessionRepository FocusSessionRepository { get; set; }
 
-        public WorkItemService
-        (
-            IWorkItemRepository workItemRepository,
-            ITimeSeriesRepository timeSeriesRepository,
-            IFocusSessionRepository focusSessionRepository
-        )
+        public WorkItemService(IWorkItemRepository workItemRepository, ITimeSeriesRepository timeSeriesRepository)
         {
             WorkItemRepository = workItemRepository;
             TimeSeriesRepository = timeSeriesRepository;
-            FocusSessionRepository = focusSessionRepository;
         }
 
         public async Task<string> CreateWorkItem(WorkItemDto item)
@@ -35,6 +29,7 @@ namespace Service.Services
             {
                 var workItem = new WorkItem
                 {
+                    UserId = item.UserId,
                     Name = item.Name.Trim(),
                     Type = item.Type,
                     Priority = item.Priority,
@@ -56,7 +51,7 @@ namespace Service.Services
 
         public async Task<WorkItem> UpdateWorkItem(WorkItem item)
         {
-            item.TimeInfo.LastModified = DateTime.UtcNow;
+            item.TimeInfo.LastModified = DateTime.Now;
 
             return await WorkItemRepository.Replace(item).ConfigureAwait(false);
         }
@@ -64,14 +59,8 @@ namespace Service.Services
         public async Task<bool> StartWorkItem(string userId, string id)
         {
             var item = await GetWorkItem(userId, id).ConfigureAwait(false);
-            var activeSession = await FocusSessionRepository.GetActiveFocusSession(item?.UserId ?? string.Empty).ConfigureAwait(false);
 
-            if (item == null || activeSession == null)
-            {
-                return false;
-            }
-
-            if (!await StopWorkItem(userId).ConfigureAwait(false))
+            if (item == null)
             {
                 return false;
             }
@@ -79,7 +68,7 @@ namespace Service.Services
             var series = new TimeSeries
             {
                 UserId = userId,
-                StartTime = DateTime.UtcNow,
+                StartTime = DateTime.Now,
                 Type = TimeSeriesType.WorkItem,
                 DataSourceId = item.Id
             };
@@ -90,7 +79,7 @@ namespace Service.Services
             return !string.IsNullOrWhiteSpace(seriesId) && await UpdateWorkItem(item).ConfigureAwait(false) != null;
         }
 
-        public async Task<bool> StopWorkItem(string userId)
+        public async Task<bool> StopWorkItem(string userId, WorkItemStatus targetStatus = WorkItemStatus.Highlighted)
         {
             var items = await WorkItemRepository.GetWorkItems(userId, WorkItemStatus.Ongoing).ConfigureAwait(false);
 
@@ -107,8 +96,13 @@ namespace Service.Services
                 return false;
             }
 
-            series.EndTime = DateTime.UtcNow;
-            item.Status = WorkItemStatus.Highlighted;
+            series.EndTime = DateTime.Now;
+            item.Status = targetStatus;
+
+            if (targetStatus == WorkItemStatus.Completed)
+            {
+                item.CompletionRecords.Add(new CompletionRecord { IsPastDue = WorkItemUtility.IsPastDue(item) });
+            }
 
             return await TimeSeriesRepository.Replace(series).ConfigureAwait(false) != null && await UpdateWorkItem(item).ConfigureAwait(false) != null;
         }
@@ -120,6 +114,11 @@ namespace Service.Services
             if (workItem == null)
             {
                 return null;
+            }
+
+            if (workItem.Status != item.Status && item.Status == WorkItemStatus.Completed)
+            {
+                workItem.CompletionRecords.Add(new CompletionRecord { IsPastDue = WorkItemUtility.IsPastDue(workItem) });
             }
 
             workItem.Name = item.Name;
@@ -136,9 +135,16 @@ namespace Service.Services
             return await WorkItemRepository.GetWorkItemMeta(item.UserId, item.Id).ConfigureAwait(false);
         }
 
+        public async Task<List<WorkItem>> GetWorkItemsByDateRange(string userId, DateTime start, DateTime end)
+        {
+            var ids = await TimeSeriesRepository.GetDataSourceIdsByDateRange(userId, start, end, TimeSeriesType.WorkItem).ConfigureAwait(false);
+
+            return await WorkItemRepository.Get(userId, ids).ConfigureAwait(false);
+        }
+
         public async Task<ActivityBreakdownDto> GetWorkItemActivityBreakdownByDateRange(string userId, DateTime start, DateTime end)
         {
-            var progress = await GetWorkItemProgressionByDateRange(userId, start, end).ConfigureAwait(false);
+            var progress = await GetWorkItemCurrentProgressionByDateRange(userId, start, end).ConfigureAwait(false);
 
             return new ActivityBreakdownDto
             {
@@ -148,11 +154,22 @@ namespace Service.Services
             };
         }
 
-        public async Task<List<WorkItemProgressionDto>> GetWorkItemProgressionByDateRange(string userId, DateTime start, DateTime end)
+        public async Task<List<WorkItemProgressionDto>> GetWorkItemCurrentProgressionByDateRange(string userId, DateTime start, DateTime end)
         {
+            return await GetWorkItemProgressionByDateRange(userId, start, end, false).ConfigureAwait(false);
+        }
+
+        public async Task<List<WorkItemProgressionDto>> GetWorkItemOverallProgressionByDateRange(string userId, DateTime start, DateTime end)
+        {
+            return await GetWorkItemProgressionByDateRange(userId, start, end, true).ConfigureAwait(false);
+        }
+
+        private async Task<List<WorkItemProgressionDto>> GetWorkItemProgressionByDateRange(string userId, DateTime start, DateTime end, bool isOverall)
+        {
+            var startDate = isOverall ? new DateTime(1970, 1, 1) : start;
             var ids = await TimeSeriesRepository.GetDataSourceIdsByDateRange(userId, start, end, TimeSeriesType.WorkItem).ConfigureAwait(false);
 
-            return await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, ids, start, end).ConfigureAwait(false);
+            return await WorkItemRepository.GetWorkItemProgressionByDateRange(userId, ids, startDate, end).ConfigureAwait(false);
         }
     }
 }

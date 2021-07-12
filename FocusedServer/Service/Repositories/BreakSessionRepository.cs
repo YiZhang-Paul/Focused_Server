@@ -15,11 +15,18 @@ namespace Service.Repositories
     {
         public BreakSessionRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(BreakSession).Name) { }
 
-        public async Task<BreakSession> GetActiveBreakSession(string userId)
+        public async Task<BreakSession> GetUnfinishedBreakSession(string userId)
         {
             var sessions = await GetOpenTimeRange(userId).ConfigureAwait(false);
 
-            return sessions.LastOrDefault(_ => _.StartTime.AddHours(_.TargetDuration) >= DateTime.Now);
+            return sessions.LastOrDefault(_ => _.TargetEndTime > DateTime.Now);
+        }
+
+        public async Task<BreakSession> GetStaleBreakSession(string userId)
+        {
+            var sessions = await GetOpenTimeRange(userId).ConfigureAwait(false);
+
+            return sessions.LastOrDefault(_ => _.TargetEndTime <= DateTime.Now);
         }
 
         public async Task<List<BreakSession>> GetBreakSessionByDateRange(string userId, DateTime start, DateTime end)

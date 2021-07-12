@@ -13,11 +13,18 @@ namespace Service.Repositories
     {
         public FocusSessionRepository(IOptions<DatabaseConfiguration> configuration) : base(configuration, typeof(FocusSession).Name) { }
 
-        public async Task<FocusSession> GetActiveFocusSession(string userId)
+        public async Task<FocusSession> GetUnfinishedFocusSession(string userId)
         {
             var sessions = await GetOpenTimeRange(userId).ConfigureAwait(false);
 
-            return sessions.LastOrDefault(_ => _.StartTime.AddHours(_.TargetDuration) >= DateTime.Now);
+            return sessions.LastOrDefault(_ => _.TargetEndTime > DateTime.Now);
+        }
+
+        public async Task<FocusSession> GetStaleFocusSession(string userId)
+        {
+            var sessions = await GetOpenTimeRange(userId).ConfigureAwait(false);
+
+            return sessions.LastOrDefault(_ => _.TargetEndTime <= DateTime.Now);
         }
     }
 }

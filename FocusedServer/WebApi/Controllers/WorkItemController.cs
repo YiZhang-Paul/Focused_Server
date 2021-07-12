@@ -52,20 +52,6 @@ namespace WebApi.Controllers
             return await WorkItemRepository.Delete(UserId, id).ConfigureAwait(false);
         }
 
-        [HttpPost]
-        [Route("{id}/start")]
-        public async Task<bool> StartWorkItem(string id)
-        {
-            return await WorkItemService.StartWorkItem(UserId, id).ConfigureAwait(false);
-        }
-
-        [HttpPost]
-        [Route("stop")]
-        public async Task<bool> StopWorkItem()
-        {
-            return await WorkItemService.StopWorkItem(UserId).ConfigureAwait(false);
-        }
-
         [HttpGet]
         [Route("{id}/meta")]
         public async Task<WorkItemDto> GetWorkItemMeta(string id)

@@ -8,7 +8,8 @@ namespace Core.Interfaces.Repositories
 {
     public interface IBreakSessionRepository : ITimeRangeRecordRepository<BreakSession>
     {
-        Task<BreakSession> GetActiveBreakSession(string userId);
+        Task<BreakSession> GetUnfinishedBreakSession(string userId);
+        Task<BreakSession> GetStaleBreakSession(string userId);
         Task<List<BreakSession>> GetBreakSessionByDateRange(string userId, DateTime start, DateTime end);
     }
 }

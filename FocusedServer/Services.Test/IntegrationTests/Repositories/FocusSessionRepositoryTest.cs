@@ -11,51 +11,92 @@ namespace Services.Test.IntegrationTests.Repositories
     [TestFixture]
     public class FocusSessionRepositoryTest
     {
-        private FocusSessionRepository _repository;
+        private FocusSessionRepository SubjectUnderTest { get; set; }
 
         [OneTimeSetUp]
         public void Setup()
         {
-            _repository = new FocusSessionRepository(ConfigurationUtility.GetDatabaseConfiguration());
+            SubjectUnderTest = new FocusSessionRepository(ConfigurationUtility.GetDatabaseConfiguration());
         }
 
         [Test]
-        public async Task GetActiveFocusSessionShouldReturnNullWhenNoActiveFocusSessionExist()
+        public async Task GetUnfinishedFocusSessionShouldReturnNullWhenNoUnfinishedFocusSessionExist()
         {
             var sessions = new List<FocusSession>
             {
                 new FocusSession { UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), EndTime = DateTime.Now.AddHours(-1) }
             };
 
-            await _repository.Add(sessions).ConfigureAwait(false);
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            Assert.IsNull(await _repository.GetActiveFocusSession("user_id").ConfigureAwait(false));
+            Assert.IsNull(await SubjectUnderTest.GetUnfinishedFocusSession("user_id").ConfigureAwait(false));
         }
 
         [Test]
-        public async Task GetActiveFocusSessionShouldReturnNullWhenActiveFocusSessionAlreadyEnded()
+        public async Task GetUnfinishedFocusSessionShouldReturnNullWhenUnfinishedFocusSessionAlreadyEnded()
         {
             var sessions = new List<FocusSession>
             {
                 new FocusSession { UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), TargetDuration = 1.5 }
             };
 
-            await _repository.Add(sessions).ConfigureAwait(false);
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            Assert.IsNull(await _repository.GetActiveFocusSession("user_id").ConfigureAwait(false));
+            Assert.IsNull(await SubjectUnderTest.GetUnfinishedFocusSession("user_id").ConfigureAwait(false));
         }
 
         [Test]
-        public async Task GetActiveFocusSessionShouldReturnActiveFocusSessionFound()
+        public async Task GetUnfinishedFocusSessionShouldReturnUnfinishedFocusSessionFound()
         {
             var sessions = new List<FocusSession>
             {
                 new FocusSession { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), TargetDuration = 2.5 }
             };
 
-            await _repository.Add(sessions).ConfigureAwait(false);
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
 
-            var result = await _repository.GetActiveFocusSession("user_id").ConfigureAwait(false);
+            var result = await SubjectUnderTest.GetUnfinishedFocusSession("user_id").ConfigureAwait(false);
+
+            Assert.AreEqual(sessions[0].Id, result.Id);
+        }
+
+        [Test]
+        public async Task GetStaleFocusSessionShouldReturnNullWhenNoStaleFocusSessionExist()
+        {
+            var sessions = new List<FocusSession>
+            {
+                new FocusSession { UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), EndTime = DateTime.Now.AddHours(-1) }
+            };
+
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
+
+            Assert.IsNull(await SubjectUnderTest.GetStaleFocusSession("user_id").ConfigureAwait(false));
+        }
+
+        [Test]
+        public async Task GetStaleFocusSessionShouldReturnNullWhenOpenFocusSessionIsNotEndedYet()
+        {
+            var sessions = new List<FocusSession>
+            {
+                new FocusSession { UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), TargetDuration = 2.5 }
+            };
+
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
+
+            Assert.IsNull(await SubjectUnderTest.GetStaleFocusSession("user_id").ConfigureAwait(false));
+        }
+
+        [Test]
+        public async Task GetStaleFocusSessionShouldReturnStaleFocusSessionFound()
+        {
+            var sessions = new List<FocusSession>
+            {
+                new FocusSession { Id = ObjectId.GenerateNewId().ToString(), UserId = "user_id", StartTime = DateTime.Now.AddHours(-2), TargetDuration = 2 }
+            };
+
+            await SubjectUnderTest.Add(sessions).ConfigureAwait(false);
+
+            var result = await SubjectUnderTest.GetStaleFocusSession("user_id").ConfigureAwait(false);
 
             Assert.AreEqual(sessions[0].Id, result.Id);
         }
@@ -63,7 +104,7 @@ namespace Services.Test.IntegrationTests.Repositories
         [TearDown]
         public async Task TearDown()
         {
-            await _repository.DropCollection().ConfigureAwait(false);
+            await SubjectUnderTest.DropCollection().ConfigureAwait(false);
         }
     }
 }

@@ -22,6 +22,14 @@ namespace Service.Repositories.RepositoryBase
             return await Collection.Find(filter).FirstOrDefaultAsync().ConfigureAwait(false);
         }
 
+        public async Task<List<T>> Get(string userId, List<string> ids)
+        {
+            var builder = Builders<T>.Filter;
+            var filter = builder.Eq(_ => _.UserId, userId) & builder.In(_ => _.Id, ids);
+
+            return await Collection.Find(filter).ToListAsync().ConfigureAwait(false);
+        }
+
         public async Task<string> Add(T document)
         {
             if (string.IsNullOrWhiteSpace(document.UserId))
@@ -57,7 +65,7 @@ namespace Service.Repositories.RepositoryBase
             var filter = builder.Eq(_ => _.UserId, document.UserId) & builder.Eq(_ => _.Id, document.Id);
             var result = await Collection.ReplaceOneAsync(filter, document).ConfigureAwait(false);
 
-            return result.IsAcknowledged ? document : null;
+            return result.IsAcknowledged && result.MatchedCount == 1 ? document : null;
         }
 
         public async Task<bool> Delete(string userId, string id)
