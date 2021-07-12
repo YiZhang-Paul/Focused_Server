@@ -1,7 +1,9 @@
 using Core.Dtos;
+using Core.Enums;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Models.Generic;
+using Core.Models.WorkItem;
 using Moq;
 using NUnit.Framework;
 using Service.Services;
@@ -346,6 +348,81 @@ namespace Services.Test.UnitTests.Services
                 It.IsAny<string>(),
                 It.Is<DateTime>(date => date == new DateTime(1970, 1, 1)),
                 It.Is<DateTime>(date => (DateTime.Now.AddDays(1) - date).TotalSeconds < 3)
+            ), Times.Once);
+        }
+
+        [Test]
+        public async Task GetPerformanceRatingShouldReturnCorrectPerformanceRating()
+        {
+            var items = new List<WorkItem>
+            {
+                new WorkItem { Type = WorkItemType.Recurring },
+                new WorkItem
+                {
+                    Type = WorkItemType.Regular,
+                    Status = WorkItemStatus.Completed,
+                    DueDate = new DateTime(2021, 1, 4),
+                    CompletionRecords = new List<CompletionRecord>
+                    {
+                        new CompletionRecord { Time = new DateTime(2021, 1, 5), IsPastDue = true }
+                    }
+                },
+                new WorkItem
+                {
+                    Type = WorkItemType.Interruption,
+                    Status = WorkItemStatus.Highlighted,
+                    TimeInfo = new TimeInfo { Created = DateTime.Now.Date.AddHours(-1) }
+                },
+                new WorkItem
+                {
+                    Type = WorkItemType.Interruption,
+                    Status = WorkItemStatus.Highlighted,
+                    TimeInfo = new TimeInfo { Created = DateTime.Now.Date }
+                }
+            };
+
+            var progressions = new List<WorkItemProgressionDto>
+            {
+                new WorkItemProgressionDto { Progress = new ProgressionCounter<double> { Current = 0.05, Target = 0.4, IsCompleted = true } },
+                new WorkItemProgressionDto { Progress = new ProgressionCounter<double> { Current = 6, Target = 5, IsCompleted = true } }
+            };
+
+            var start = new DateTime(2021, 1, 1);
+            var end = new DateTime(2021, 1, 10);
+            WorkItemService.Setup(_ => _.GetWorkItemsByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(items);
+            WorkItemService.Setup(_ => _.GetWorkItemOverallProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(progressions);
+            WorkItemService.Setup(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new ActivityBreakdownDto());
+
+            var result = await SubjectUnderTest.GetPerformanceRating("user_id", start, end).ConfigureAwait(false);
+
+            Assert.AreEqual(0, result.Determination);
+            Assert.AreEqual(0.5, result.Estimation);
+            Assert.AreEqual(0.5, result.Planning);
+            Assert.AreEqual(0.5, result.Adaptability);
+            Assert.AreEqual(0, result.Sustainability);
+        }
+
+        [Test]
+        public async Task GetPerformanceRatingShouldDefaultToPastTwoWeeks()
+        {
+            WorkItemService.Setup(_ => _.GetWorkItemsByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<WorkItem>());
+            WorkItemService.Setup(_ => _.GetWorkItemOverallProgressionByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<WorkItemProgressionDto>());
+            WorkItemService.Setup(_ => _.GetWorkItemActivityBreakdownByDateRange(It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new ActivityBreakdownDto());
+
+            await SubjectUnderTest.GetPerformanceRating("user_id", null, null).ConfigureAwait(false);
+
+            WorkItemService.Verify(_ => _.GetWorkItemsByDateRange
+            (
+                It.IsAny<string>(),
+                It.Is<DateTime>(date => (DateTime.Now.AddDays(-14) - date).TotalSeconds < 3),
+                It.Is<DateTime>(date => (DateTime.Now - date).TotalSeconds < 3)
+            ), Times.Once);
+
+            WorkItemService.Verify(_ => _.GetWorkItemOverallProgressionByDateRange
+            (
+                It.IsAny<string>(),
+                It.Is<DateTime>(date => (DateTime.Now.AddDays(-14) - date).TotalSeconds < 3),
+                It.Is<DateTime>(date => (DateTime.Now - date).TotalSeconds < 3)
             ), Times.Once);
         }
     }

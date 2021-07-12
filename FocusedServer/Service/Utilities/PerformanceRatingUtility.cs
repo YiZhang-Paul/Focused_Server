@@ -47,6 +47,11 @@ namespace Service.Utilities
 
         public static double GetSustainabilityRating(List<double> durations)
         {
+            if (!durations.Any() || durations.Sum() == 0)
+            {
+                return 0;
+            }
+
             var average = durations.Average();
             var variance = durations.Average(_ => Math.Pow(_ - average, 2));
 

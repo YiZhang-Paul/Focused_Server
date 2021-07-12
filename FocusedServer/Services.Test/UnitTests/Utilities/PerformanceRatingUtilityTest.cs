@@ -157,6 +157,14 @@ namespace Services.Test.UnitTests.Utilities
         }
 
         [Test]
+        public void GetSustainabilityRatingShouldReturnZeroWhenNoUserActivityFound()
+        {
+            var result = PerformanceRatingUtility.GetSustainabilityRating(new List<double>());
+
+            Assert.AreEqual(0, result);
+        }
+
+        [Test]
         public void GetSustainabilityRatingShouldReturnCorrectSustainabilityRating()
         {
             var durations = new List<double> { 5, 1, 3, 4, 7 };

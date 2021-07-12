@@ -247,6 +247,110 @@ namespace Services.Test.UnitTests.Services
         }
 
         [Test]
+        public async Task StartOverlearningShouldReturnFalseWhenNoActiveFocusSessionExist()
+        {
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync((FocusSession)null);
+
+            Assert.IsFalse(await SubjectUnderTest.StartOverlearning("user_id", WorkItemStatus.Completed).ConfigureAwait(false));
+            WorkItemService.Verify(_ => _.StopWorkItem(It.IsAny<string>(), It.IsAny<WorkItemStatus>()), Times.Never);
+        }
+
+        [Test]
+        public async Task StartOverlearningShouldReturnFalseWhenFailedToStopWorkItem()
+        {
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
+            WorkItemService.Setup(_ => _.StopWorkItem(It.IsAny<string>(), It.IsAny<WorkItemStatus>())).ReturnsAsync(false);
+
+            Assert.IsFalse(await SubjectUnderTest.StartOverlearning("user_id", WorkItemStatus.Completed).ConfigureAwait(false));
+            WorkItemService.Verify(_ => _.StopWorkItem(It.IsAny<string>(), It.IsAny<WorkItemStatus>()), Times.Once);
+        }
+
+        [Test]
+        public async Task StartOverlearningShouldReturnFalseWhenFailedToStartOverlearning()
+        {
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
+            WorkItemService.Setup(_ => _.StopWorkItem(It.IsAny<string>(), It.IsAny<WorkItemStatus>())).ReturnsAsync(true);
+            TimeSeriesRepository.Setup(_ => _.Add(It.IsAny<TimeSeries>())).ReturnsAsync(string.Empty);
+
+            Assert.IsFalse(await SubjectUnderTest.StartOverlearning("user_id", WorkItemStatus.Completed).ConfigureAwait(false));
+            TimeSeriesRepository.Verify(_ => _.Add(It.IsAny<TimeSeries>()), Times.Once);
+        }
+
+        [Test]
+        public async Task StartOverlearningShouldReturnTrue()
+        {
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession { Id = "session_id" });
+            WorkItemService.Setup(_ => _.StopWorkItem(It.IsAny<string>(), It.IsAny<WorkItemStatus>())).ReturnsAsync(true);
+            TimeSeriesRepository.Setup(_ => _.Add(It.IsAny<TimeSeries>())).ReturnsAsync("series_id");
+
+            Assert.IsTrue(await SubjectUnderTest.StartOverlearning("user_id", WorkItemStatus.Completed).ConfigureAwait(false));
+
+            TimeSeriesRepository.Verify(_ => _.Add
+            (
+                It.Is<TimeSeries>(series => series.UserId == "user_id" && (DateTime.Now - series.StartTime).TotalSeconds < 3 && series.DataSourceId == "session_id")
+            ), Times.Once);
+        }
+
+        [Test]
+        public async Task SwitchWorkItemShouldReturnFalseWhenNoActiveFocusSessionExist()
+        {
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync((FocusSession)null);
+
+            Assert.IsFalse(await SubjectUnderTest.SwitchWorkItem("user_id", "item_id").ConfigureAwait(false));
+            WorkItemService.Verify(_ => _.StopWorkItem(It.IsAny<string>(), It.IsAny<WorkItemStatus>()), Times.Never);
+        }
+
+        [Test]
+        public async Task SwitchWorkItemShouldReturnFalseWhenFailedToStopWorkItem()
+        {
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
+            WorkItemService.Setup(_ => _.StopWorkItem(It.IsAny<string>(), It.IsAny<WorkItemStatus>())).ReturnsAsync(false);
+
+            Assert.IsFalse(await SubjectUnderTest.SwitchWorkItem("user_id", "item_id").ConfigureAwait(false));
+            WorkItemService.Verify(_ => _.StopWorkItem(It.IsAny<string>(), It.IsAny<WorkItemStatus>()), Times.Once);
+        }
+
+        [Test]
+        public async Task SwitchWorkItemShouldReturnFalseWhenFailedToStopOverlearning()
+        {
+            var series = new TimeSeries { Type = TimeSeriesType.Session };
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
+            WorkItemService.Setup(_ => _.StopWorkItem(It.IsAny<string>(), It.IsAny<WorkItemStatus>())).ReturnsAsync(true);
+            TimeSeriesRepository.Setup(_ => _.GetOpenTimeRange(It.IsAny<string>())).ReturnsAsync(new List<TimeSeries> { series });
+            TimeSeriesRepository.Setup(_ => _.Replace(It.IsAny<TimeSeries>())).ReturnsAsync((TimeSeries)null);
+
+            Assert.IsFalse(await SubjectUnderTest.SwitchWorkItem("user_id", "item_id").ConfigureAwait(false));
+        }
+
+        [Test]
+        public async Task SwitchWorkItemShouldReturnFalseWhenFailedToStartWorkItem()
+        {
+            var series = new TimeSeries { Type = TimeSeriesType.Session };
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
+            WorkItemService.Setup(_ => _.StopWorkItem(It.IsAny<string>(), It.IsAny<WorkItemStatus>())).ReturnsAsync(true);
+            WorkItemService.Setup(_ => _.StartWorkItem(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
+            TimeSeriesRepository.Setup(_ => _.GetOpenTimeRange(It.IsAny<string>())).ReturnsAsync(new List<TimeSeries> { series });
+            TimeSeriesRepository.Setup(_ => _.Replace(It.IsAny<TimeSeries>())).ReturnsAsync(series);
+
+            Assert.IsFalse(await SubjectUnderTest.SwitchWorkItem("user_id", "item_id").ConfigureAwait(false));
+
+            TimeSeriesRepository.Verify(_ => _.Replace(It.Is<TimeSeries>(series => (DateTime.Now - series.EndTime.Value).TotalSeconds < 3)), Times.Once);
+        }
+
+        [Test]
+        public async Task SwitchWorkItemShouldReturnTrueWhenSuccessfullySwitchedWorkItem()
+        {
+            var series = new TimeSeries { Type = TimeSeriesType.Session };
+            FocusSessionRepository.Setup(_ => _.GetUnfinishedFocusSession(It.IsAny<string>())).ReturnsAsync(new FocusSession());
+            WorkItemService.Setup(_ => _.StopWorkItem(It.IsAny<string>(), It.IsAny<WorkItemStatus>())).ReturnsAsync(true);
+            WorkItemService.Setup(_ => _.StartWorkItem(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
+            TimeSeriesRepository.Setup(_ => _.GetOpenTimeRange(It.IsAny<string>())).ReturnsAsync(new List<TimeSeries> { series });
+            TimeSeriesRepository.Setup(_ => _.Replace(It.IsAny<TimeSeries>())).ReturnsAsync(series);
+
+            Assert.IsTrue(await SubjectUnderTest.SwitchWorkItem("user_id", "item_id").ConfigureAwait(false));
+        }
+
+        [Test]
         public async Task GetOverlearningHoursByDateRangeShouldReturnTotalOverlearningHours()
         {
             var sessions = new List<TimeSeries>
