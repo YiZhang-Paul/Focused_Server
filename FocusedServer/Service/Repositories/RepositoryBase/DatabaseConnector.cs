@@ -11,13 +11,17 @@ namespace Service.Repositories.RepositoryBase
         protected IMongoCollection<T> Collection { get; set; }
         private IMongoDatabase Database { get; set; }
 
-        public DatabaseConnector(IOptions<DatabaseConfiguration> configuration, string collection)
+        public DatabaseConnector(IOptions<DatabaseConfiguration> configuration, string collection = "")
         {
             Database = new MongoClient(configuration.Value.Url).GetDatabase(configuration.Value.Name);
-            Collection = Connect<T>(collection);
+
+            if (!string.IsNullOrWhiteSpace(collection))
+            {
+                Collection = Connect<T>(collection);
+            }
         }
 
-        protected IMongoCollection<K> Connect<K>(string collection) where K : DatabaseEntry
+        public IMongoCollection<K> Connect<K>(string collection) where K : DatabaseEntry
         {
             return Database.GetCollection<K>(collection);
         }

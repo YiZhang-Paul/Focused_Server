@@ -1,6 +1,7 @@
 using Core.Configurations;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Core.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Service.Repositories;
+using Service.Repositories.RepositoryBase;
 using Service.Services;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
@@ -35,6 +37,7 @@ namespace WebApi
             });
 
             services.AddControllers();
+            services.AddScoped<DatabaseConnector<DatabaseEntry>, DatabaseConnector<DatabaseEntry>>();
             services.AddScoped<IWorkItemRepository, WorkItemRepository>();
             services.AddScoped<ITimeSeriesRepository, TimeSeriesRepository>();
             services.AddScoped<IFocusSessionRepository, FocusSessionRepository>();
