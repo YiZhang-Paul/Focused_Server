@@ -22,7 +22,7 @@ namespace WebApi
                 })
                 .ConfigureServices(services =>
                 {
-                    services.AddHostedService<EnsureMongoDbIndexes>();
+                    services.AddHostedService<MongoDbIndexesSetup>();
                 });
     }
 }
